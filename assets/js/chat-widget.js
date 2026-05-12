@@ -71,7 +71,8 @@
 			if ( typeof crypto !== 'undefined' && crypto.randomUUID ) {
 				return crypto.randomUUID();
 			}
-			// Fallback UUID v4 using crypto.getRandomValues() when randomUUID is unavailable.
+			// Fallback: use crypto.getRandomValues() (supported in all browsers that
+			// meet the WordPress 6.0 browser support requirement).
 			if ( typeof crypto !== 'undefined' && crypto.getRandomValues ) {
 				var bytes = new Uint8Array( 16 );
 				crypto.getRandomValues( bytes );
@@ -90,12 +91,24 @@
 					hex.slice( 20 )
 				);
 			}
-			// Last-resort fallback (very old browsers that lack crypto API entirely).
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, function ( c ) {
-				var r = ( Date.now() ^ ( Math.random() * 16 ) ) | 0;
-				var v = c === 'x' ? r : ( r & 0x3 ) | 0x8;
-				return v.toString( 16 );
-			} );
+			// Emergency fallback: timestamp-based identifier for environments where
+			// the crypto API is completely absent. Not cryptographically random but
+			// sufficient for a chat session correlation ID. Such environments are not
+			// supported by WordPress 6.0 itself.
+			var ts  = Date.now().toString( 16 ).padStart( 12, '0' );
+			var perf = ( typeof performance !== 'undefined' && performance.now )
+				? Math.floor( performance.now() * 1000 ).toString( 16 ).padStart( 12, '0' )
+				: '000000000000';
+			var combined = ( ts + perf + '00000000' ).slice( 0, 32 );
+			combined = combined.slice( 0, 12 ) + '4' + combined.slice( 13, 16 )
+				+ '8' + combined.slice( 17, 20 ) + combined.slice( 20 );
+			return (
+				combined.slice( 0, 8 ) + '-' +
+				combined.slice( 8, 12 ) + '-' +
+				combined.slice( 12, 16 ) + '-' +
+				combined.slice( 16, 20 ) + '-' +
+				combined.slice( 20, 32 )
+			);
 		},
 
 		persist: function () {
