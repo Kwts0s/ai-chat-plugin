@@ -4,6 +4,7 @@
  *
  * Endpoint: POST /wp-json/ai-chat/v1/chat
  * Endpoint: GET  /wp-json/ai-chat/v1/health
+ * Endpoint: GET  /wp-json/ai-chat/v1/nonce
  *
  * @package AIChatPlugin
  */
@@ -72,6 +73,16 @@ final class AI_Chat_REST_Controller {
 				'methods'             => WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'handle_health' ),
 				'permission_callback' => array( $this, 'check_admin_capability' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/nonce',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'handle_nonce' ),
+				'permission_callback' => '__return_true',
 			)
 		);
 	}
@@ -240,6 +251,35 @@ final class AI_Chat_REST_Controller {
 		}
 
 		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * Return a fresh proxy nonce for frontend retry flow.
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function handle_nonce( WP_REST_Request $request ) {
+		$settings = AI_Chat_Sanitizer::get_settings();
+
+		if ( 'proxy' !== $settings['connection_mode'] ) {
+			return new WP_Error(
+				'proxy_disabled',
+				__( 'Proxy mode is not enabled.', 'ai-chat-plugin' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$response = rest_ensure_response(
+			array(
+				'nonce' => wp_create_nonce( 'ai_chat_proxy' ),
+			)
+		);
+
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
+		$response->header( 'Pragma', 'no-cache' );
+
+		return $response;
 	}
 
 	// ── Rate limiting ───────────────────────────────────────────────────────

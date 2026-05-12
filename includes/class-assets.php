@@ -142,6 +142,7 @@ final class AI_Chat_Assets {
 			'enabled'         => true,
 			'mode'            => $settings['connection_mode'],
 			'proxyUrl'        => $is_proxy ? esc_url_raw( rest_url( AI_Chat_REST_Controller::NAMESPACE . '/chat' ) ) : '',
+			'nonceUrl'        => $is_proxy ? esc_url_raw( rest_url( AI_Chat_REST_Controller::NAMESPACE . '/nonce' ) ) : '',
 			'nonce'           => $is_proxy ? wp_create_nonce( 'ai_chat_proxy' ) : '',
 			'companyName'     => esc_html( $settings['company_name'] ),
 			'companySubtitle' => esc_html( $settings['company_subtitle'] ),

@@ -165,12 +165,47 @@
 
 	var API = {
 		/**
+		 * Fetch a fresh proxy nonce.
+		 *
+		 * @returns {Promise<boolean>}
+		 */
+		refreshNonce: function () {
+			if ( cfg.mode !== 'proxy' || ! cfg.nonceUrl ) {
+				return Promise.resolve( false );
+			}
+
+			return fetch( cfg.nonceUrl, {
+				method:      'GET',
+				cache:       'no-store',
+				credentials: 'same-origin',
+			} ).then( function ( response ) {
+				if ( ! response.ok ) {
+					return false;
+				}
+				return response.json().then( function ( data ) {
+					if ( data && data.nonce ) {
+						cfg.nonce = String( data.nonce );
+						log( 'Nonce refreshed' );
+						return true;
+					}
+					return false;
+				} ).catch( function () {
+					return false;
+				} );
+			} ).catch( function () {
+				return false;
+			} );
+		},
+
+		/**
 		 * Send a message and return the backend response.
 		 *
 		 * @param {string} message
+		 * @param {boolean} hasRetriedNonce
 		 * @returns {Promise<{sessionId: string, text: string, channel: string}>}
 		 */
-		send: function ( message ) {
+		send: function ( message, hasRetriedNonce ) {
+			var retried = !! hasRetriedNonce;
 			var timeoutMs = ( ( cfg.timeout || 30 ) * 1000 );
 			var controller = ( typeof AbortController !== 'undefined' ) ? new AbortController() : null;
 			var timer = controller ? setTimeout( function () { controller.abort(); }, timeoutMs ) : null;
@@ -208,6 +243,20 @@
 
 				if ( ! response.ok ) {
 					return response.json().catch( function () { return {}; } ).then( function ( errData ) {
+						if (
+							cfg.mode === 'proxy' &&
+							! retried &&
+							response.status === 403 &&
+							errData &&
+							errData.code === 'invalid_nonce'
+						) {
+							return API.refreshNonce().then( function ( refreshed ) {
+								if ( refreshed ) {
+									return API.send( message, true );
+								}
+								throw new Error( errData.message || ( 'HTTP ' + response.status ) );
+							} );
+						}
 						throw new Error( errData.message || ( 'HTTP ' + response.status ) );
 					} );
 				}
