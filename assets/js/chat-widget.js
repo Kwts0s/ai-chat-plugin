@@ -333,7 +333,17 @@
 			bubble.setAttribute( 'aria-label', ( cfg.i18n && cfg.i18n.openChat ) || 'Open chat' );
 			bubble.setAttribute( 'aria-expanded', 'false' );
 			bubble.setAttribute( 'aria-controls', 'ai-chat-panel' );
-			bubble.innerHTML = cfg.bubbleIcon || this.defaultIcon();
+
+			if ( cfg.bubbleIconUrl ) {
+				var bubbleIconImg = document.createElement( 'img' );
+				bubbleIconImg.className = 'ai-chat-bubble-icon-img';
+				bubbleIconImg.src = String( cfg.bubbleIconUrl );
+				bubbleIconImg.alt = '';
+				bubbleIconImg.setAttribute( 'aria-hidden', 'true' );
+				bubble.appendChild( bubbleIconImg );
+			} else {
+				bubble.innerHTML = cfg.bubbleIcon || this.defaultIcon();
+			}
 
 			document.body.appendChild( bubble );
 			this.el.bubble = bubble;
