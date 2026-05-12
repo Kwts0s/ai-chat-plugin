@@ -286,7 +286,7 @@ final class AI_Chat_Admin_Settings {
 					</p>
 					<p class="description"><?php esc_html_e( 'Select or upload a square image shown in the chat header (40×40 px recommended).', 'ai-chat-plugin' ); ?></p>
 					<?php if ( ! empty( $s['company_logo'] ) ) : ?>
-						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="<?php esc_attr_e( 'Company logo preview', 'ai-chat-plugin' ); ?>" class="ai-chat-admin-logo-preview" />
+						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="<?php echo esc_attr( sprintf( /* translators: %s: company name. */ __( 'Preview of %s logo', 'ai-chat-plugin' ), (string) ( $s['company_name'] ?: __( 'company', 'ai-chat-plugin' ) ) ) ); ?>" class="ai-chat-admin-logo-preview" />
 					<?php endif; ?>
 				</td>
 			</tr>
@@ -306,7 +306,7 @@ final class AI_Chat_Admin_Settings {
 					</p>
 					<p class="description"><?php esc_html_e( 'Use an SVG from the media library for the chat bubble icon. If set, this is used first.', 'ai-chat-plugin' ); ?></p>
 					<?php if ( ! empty( $s['bubble_icon_svg_media_url'] ) ) : ?>
-						<img src="<?php echo esc_url( $s['bubble_icon_svg_media_url'] ); ?>" alt="<?php esc_attr_e( 'Bubble icon preview', 'ai-chat-plugin' ); ?>" class="ai-chat-admin-icon-preview" />
+						<img src="<?php echo esc_url( $s['bubble_icon_svg_media_url'] ); ?>" alt="<?php esc_attr_e( 'Preview of chat bubble icon', 'ai-chat-plugin' ); ?>" class="ai-chat-admin-icon-preview" />
 					<?php endif; ?>
 				</td>
 			</tr>
