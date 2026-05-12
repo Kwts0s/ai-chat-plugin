@@ -224,14 +224,14 @@ final class AI_Chat_Sanitizer {
 					$name = strtolower( $attr->name );
 
 					// Block event handlers and dangerous attrs.
-					if ( str_starts_with( $name, 'on' ) ) {
+					if ( strncmp( $name, 'on', 2 ) === 0 ) {
 						$attrs_to_remove[] = $attr->name;
 						continue;
 					}
 					// Block href/xlink:href with javascript: or data: URIs.
 					if ( in_array( $name, array( 'href', 'xlink:href' ), true ) ) {
 						$val = strtolower( trim( $attr->value ) );
-						if ( str_starts_with( $val, 'javascript:' ) || str_starts_with( $val, 'data:' ) ) {
+						if ( strncmp( $val, 'javascript:', 11 ) === 0 || strncmp( $val, 'data:', 5 ) === 0 ) {
 							$attrs_to_remove[] = $attr->name;
 							continue;
 						}

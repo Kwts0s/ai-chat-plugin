@@ -84,7 +84,7 @@ final class AI_Chat_REST_Controller {
 	 * @param WP_REST_Request $request Incoming request.
 	 * @return bool|WP_Error
 	 */
-	public function check_nonce_and_rate_limit( WP_REST_Request $request ): bool|WP_Error {
+	public function check_nonce_and_rate_limit( WP_REST_Request $request ) {
 		// Verify nonce (works for both logged-in and anonymous visitors).
 		$nonce = $request->get_header( 'X-AI-Chat-Nonce' );
 		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'ai_chat_proxy' ) ) {
@@ -127,7 +127,7 @@ final class AI_Chat_REST_Controller {
 	 *
 	 * @return bool|WP_Error
 	 */
-	public function check_admin_capability(): bool|WP_Error {
+	public function check_admin_capability() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'forbidden',
@@ -148,7 +148,7 @@ final class AI_Chat_REST_Controller {
 	 * @param string          $param   Parameter name.
 	 * @return true|WP_Error
 	 */
-	public function validate_message( mixed $value, WP_REST_Request $request, string $param ): bool|WP_Error {
+	public function validate_message( $value, WP_REST_Request $request, string $param ) {
 		if ( ! is_string( $value ) || '' === trim( $value ) ) {
 			return new WP_Error( 'empty_message', __( 'Message cannot be empty.', 'ai-chat-plugin' ) );
 		}
@@ -170,7 +170,7 @@ final class AI_Chat_REST_Controller {
 	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function handle_chat( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+	public function handle_chat( WP_REST_Request $request ) {
 		$settings   = AI_Chat_Sanitizer::get_settings();
 		$message    = $request->get_param( 'message' );
 		$session_id = AI_Chat_Session_Manager::validate_or_create(
@@ -221,7 +221,7 @@ final class AI_Chat_REST_Controller {
 	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function handle_health( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+	public function handle_health( WP_REST_Request $request ) {
 		$settings = AI_Chat_Sanitizer::get_settings();
 
 		if ( empty( $settings['backend_url'] ) ) {
@@ -252,7 +252,7 @@ final class AI_Chat_REST_Controller {
 	 *
 	 * @return true|WP_Error
 	 */
-	private function enforce_rate_limit(): bool|WP_Error {
+	private function enforce_rate_limit() {
 		$settings = AI_Chat_Sanitizer::get_settings();
 		$limit    = (int) $settings['rate_limit'];
 		$ip       = $this->get_client_ip();
