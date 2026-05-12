@@ -285,8 +285,16 @@ final class AI_Chat_Admin_Settings {
 						</button>
 					</p>
 					<p class="description"><?php esc_html_e( 'Select or upload a square image shown in the chat header (40×40 px recommended).', 'ai-chat-plugin' ); ?></p>
-					<?php if ( ! empty( $s['company_logo'] ) ) : ?>
-						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="<?php echo esc_attr( sprintf( /* translators: %s: company name. */ __( 'Preview of %s logo', 'ai-chat-plugin' ), (string) ( $s['company_name'] ?: __( 'company', 'ai-chat-plugin' ) ) ) ); ?>" class="ai-chat-admin-logo-preview" />
+					<?php
+					if ( ! empty( $s['company_logo'] ) ) :
+						$company_name_for_alt = (string) ( $s['company_name'] ?: __( 'company', 'ai-chat-plugin' ) );
+						$logo_preview_alt     = sprintf(
+							/* translators: %s: company name. */
+							__( 'Preview of %s logo', 'ai-chat-plugin' ),
+							$company_name_for_alt
+						);
+						?>
+						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="<?php echo esc_attr( $logo_preview_alt ); ?>" class="ai-chat-admin-logo-preview" />
 					<?php endif; ?>
 				</td>
 			</tr>

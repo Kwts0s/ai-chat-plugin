@@ -32,7 +32,7 @@
 				return;
 			}
 
-			var mediaTitle = ( aiChatAdmin && aiChatAdmin.i18n && aiChatAdmin.i18n.selectMedia ) ? aiChatAdmin.i18n.selectMedia : '';
+			var mediaTitle = ( aiChatAdmin && aiChatAdmin.i18n && aiChatAdmin.i18n.selectMedia ) ? aiChatAdmin.i18n.selectMedia : 'Select media';
 			var frameConfig = {
 				title:    mediaTitle,
 				multiple: false,
