@@ -28,6 +28,7 @@ final class AI_Chat_Sanitizer {
 			'company_name'     => 'AI Assistant',
 			'company_subtitle' => 'Always here to help',
 			'company_logo'     => '',
+			'bubble_icon_svg_media_url' => '',
 			'bubble_icon_svg'  => '',
 			'welcome_message'  => 'Hello! How can I help you today?',
 			'disclaimer'       => __( 'This chat is powered by AI. Responses may not always be accurate.', 'ai-chat-plugin' ),
@@ -38,6 +39,10 @@ final class AI_Chat_Sanitizer {
 			'text_color'       => '#1e293b',
 			'bubble_position'  => 'bottom-right',
 			'border_radius'    => 16,
+			'bubble_size'      => 58,
+			'bubble_style'     => 'circle',
+			'bubble_border_width' => 0,
+			'bubble_border_color' => '#ffffff',
 			'custom_css'       => '',
 			'display_mode'     => 'global',
 			'display_page_ids' => array(),
@@ -84,13 +89,17 @@ final class AI_Chat_Sanitizer {
 		$logo_raw        = isset( $input['company_logo'] ) ? trim( (string) $input['company_logo'] ) : '';
 		$clean['company_logo'] = filter_var( esc_url_raw( $logo_raw ), FILTER_VALIDATE_URL ) ? esc_url_raw( $logo_raw ) : $defaults['company_logo'];
 
+		// Bubble icon SVG media URL.
+		$bubble_svg_url_raw = isset( $input['bubble_icon_svg_media_url'] ) ? trim( (string) $input['bubble_icon_svg_media_url'] ) : '';
+		$clean['bubble_icon_svg_media_url'] = filter_var( esc_url_raw( $bubble_svg_url_raw ), FILTER_VALIDATE_URL ) ? esc_url_raw( $bubble_svg_url_raw ) : $defaults['bubble_icon_svg_media_url'];
+
 		// Bubble SVG — strictly sanitized.
 		$clean['bubble_icon_svg'] = isset( $input['bubble_icon_svg'] )
 			? self::sanitize_svg( (string) $input['bubble_icon_svg'] )
 			: $defaults['bubble_icon_svg'];
 
 		// Color fields — must be valid hex colors.
-		foreach ( array( 'primary_color', 'secondary_color', 'bg_color', 'text_color' ) as $field ) {
+		foreach ( array( 'primary_color', 'secondary_color', 'bg_color', 'text_color', 'bubble_border_color' ) as $field ) {
 			$clean[ $field ] = isset( $input[ $field ] ) && self::is_valid_hex_color( $input[ $field ] )
 				? sanitize_hex_color( $input[ $field ] )
 				: $defaults[ $field ];
@@ -105,6 +114,21 @@ final class AI_Chat_Sanitizer {
 		$clean['border_radius'] = isset( $input['border_radius'] )
 			? max( 0, min( 50, (int) $input['border_radius'] ) )
 			: $defaults['border_radius'];
+
+		// Bubble size — integer 44–90.
+		$clean['bubble_size'] = isset( $input['bubble_size'] )
+			? max( 44, min( 90, (int) $input['bubble_size'] ) )
+			: $defaults['bubble_size'];
+
+		// Bubble style.
+		$clean['bubble_style'] = in_array( $input['bubble_style'] ?? '', array( 'circle', 'rounded', 'square' ), true )
+			? $input['bubble_style']
+			: $defaults['bubble_style'];
+
+		// Bubble border width — integer 0–8.
+		$clean['bubble_border_width'] = isset( $input['bubble_border_width'] )
+			? max( 0, min( 8, (int) $input['bubble_border_width'] ) )
+			: $defaults['bubble_border_width'];
 
 		// Custom CSS — minimal sanitization (allow CSS but strip PHP/HTML tags).
 		$clean['custom_css'] = isset( $input['custom_css'] )

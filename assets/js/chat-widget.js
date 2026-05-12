@@ -333,7 +333,12 @@
 			bubble.setAttribute( 'aria-label', ( cfg.i18n && cfg.i18n.openChat ) || 'Open chat' );
 			bubble.setAttribute( 'aria-expanded', 'false' );
 			bubble.setAttribute( 'aria-controls', 'ai-chat-panel' );
-			bubble.innerHTML = cfg.bubbleIcon || this.defaultIcon();
+
+			if ( cfg.bubbleIconUrl ) {
+				bubble.innerHTML = '<img class="ai-chat-bubble-icon-img" src="' + escHtml( cfg.bubbleIconUrl ) + '" alt="" aria-hidden="true" />';
+			} else {
+				bubble.innerHTML = cfg.bubbleIcon || this.defaultIcon();
+			}
 
 			document.body.appendChild( bubble );
 			this.el.bubble = bubble;

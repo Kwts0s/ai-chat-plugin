@@ -69,6 +69,8 @@ final class AI_Chat_Assets {
 			return;
 		}
 
+		wp_enqueue_media();
+
 		wp_enqueue_style(
 			'ai-chat-admin',
 			AI_CHAT_URL . 'assets/css/admin.css',
@@ -147,6 +149,7 @@ final class AI_Chat_Assets {
 			'companyName'     => esc_html( $settings['company_name'] ),
 			'companySubtitle' => esc_html( $settings['company_subtitle'] ),
 			'logoUrl'         => esc_url( $settings['company_logo'] ),
+			'bubbleIconUrl'   => esc_url( $settings['bubble_icon_svg_media_url'] ),
 			'bubbleIcon'      => $settings['bubble_icon_svg'], // Already sanitized SVG.
 			'welcomeMessage'  => esc_html( $settings['welcome_message'] ),
 			'disclaimer'      => esc_html( $settings['disclaimer'] ),
@@ -190,14 +193,26 @@ final class AI_Chat_Assets {
 	private function inline_css_variables( array $settings ): void {
 		$position_class = ( 'bottom-left' === $settings['bubble_position'] ) ? 'ai-chat--left' : '';
 		$radius         = (int) $settings['border_radius'];
+		$bubble_size    = (int) $settings['bubble_size'];
+		$bubble_border_width = (int) $settings['bubble_border_width'];
+		$bubble_radius  = '50%';
+		if ( 'rounded' === $settings['bubble_style'] ) {
+			$bubble_radius = '16px';
+		} elseif ( 'square' === $settings['bubble_style'] ) {
+			$bubble_radius = '8px';
+		}
 
 		$vars = sprintf(
-			'--ai-chat-primary:%s;--ai-chat-secondary:%s;--ai-chat-bg:%s;--ai-chat-text:%s;--ai-chat-radius:%dpx;',
+			'--ai-chat-primary:%s;--ai-chat-secondary:%s;--ai-chat-bg:%s;--ai-chat-text:%s;--ai-chat-radius:%dpx;--ai-chat-bubble-size:%dpx;--ai-chat-bubble-radius:%s;--ai-chat-bubble-border-width:%dpx;--ai-chat-bubble-border-color:%s;',
 			esc_attr( $settings['primary_color'] ),
 			esc_attr( $settings['secondary_color'] ),
 			esc_attr( $settings['bg_color'] ),
 			esc_attr( $settings['text_color'] ),
-			$radius
+			$radius,
+			$bubble_size,
+			esc_attr( $bubble_radius ),
+			$bubble_border_width,
+			esc_attr( $settings['bubble_border_color'] )
 		);
 
 		// Position vars.

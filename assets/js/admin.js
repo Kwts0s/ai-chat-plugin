@@ -20,6 +20,47 @@
 		var $btn    = $( '#ai-chat-test-connection' );
 		var $result = $( '#ai-chat-health-result' );
 
+		// ── Media library selectors ───────────────────────────────────────────
+		$( '.ai-chat-media-select' ).on( 'click', function ( e ) {
+			e.preventDefault();
+
+			var targetSelector = String( $( this ).data( 'target' ) || '' );
+			var mediaType      = String( $( this ).data( 'type' ) || 'image' );
+			var $target        = $( targetSelector );
+
+			if ( ! targetSelector || ! $target.length || typeof wp === 'undefined' || ! wp.media ) {
+				return;
+			}
+
+			var frameConfig = {
+				title:    'Select Media',
+				multiple: false,
+				library:  { type: mediaType },
+			};
+
+			var frame = wp.media( frameConfig );
+			frame.on( 'select', function () {
+				var selection = frame.state().get( 'selection' ).first();
+				if ( ! selection ) {
+					return;
+				}
+				var attachment = selection.toJSON();
+				if ( attachment && attachment.url ) {
+					$target.val( attachment.url ).trigger( 'change' );
+				}
+			} );
+			frame.open();
+		} );
+
+		$( '.ai-chat-media-clear' ).on( 'click', function ( e ) {
+			e.preventDefault();
+			var targetSelector = String( $( this ).data( 'target' ) || '' );
+			var $target = $( targetSelector );
+			if ( $target.length ) {
+				$target.val( '' ).trigger( 'change' );
+			}
+		} );
+
 		$btn.on( 'click', function () {
 			var backendUrl = $( '#ai_chat_backend_url' ).val().trim();
 

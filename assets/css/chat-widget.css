@@ -22,6 +22,9 @@
 	--ai-chat-transition:    .3s cubic-bezier(.4, 0, .2, 1);
 	--ai-chat-bubble-right:  24px;
 	--ai-chat-bubble-left:   auto;
+	--ai-chat-bubble-radius: 50%;
+	--ai-chat-bubble-border-width: 0px;
+	--ai-chat-bubble-border-color: #ffffff;
 }
 
 /* ── Floating bubble ─────────────────────────────────────────────────────── */
@@ -33,10 +36,10 @@
 	left:             var(--ai-chat-bubble-left);
 	width:            var(--ai-chat-bubble-size);
 	height:           var(--ai-chat-bubble-size);
-	border-radius:    50%;
+	border-radius:    var(--ai-chat-bubble-radius);
 	background:       var(--ai-chat-primary);
 	color:            #fff;
-	border:           none;
+	border:           var(--ai-chat-bubble-border-width) solid var(--ai-chat-bubble-border-color);
 	cursor:           pointer;
 	display:          flex;
 	align-items:      center;
@@ -63,6 +66,14 @@
 .ai-chat-bubble svg {
 	pointer-events: none;
 	display:        block;
+}
+
+.ai-chat-bubble-icon-img {
+	width:          62%;
+	height:         62%;
+	object-fit:     contain;
+	display:        block;
+	pointer-events: none;
 }
 
 /* ── Panel ───────────────────────────────────────────────────────────────── */

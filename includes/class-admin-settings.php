@@ -29,6 +29,15 @@ final class AI_Chat_Admin_Settings {
 		'advanced',
 	);
 
+	/** Tab field map used to preserve non-active tab values on save. */
+	private const TAB_FIELDS = array(
+		'backend'    => array( 'backend_url', 'connection_mode' ),
+		'branding'   => array( 'company_name', 'company_subtitle', 'company_logo', 'bubble_icon_svg_media_url', 'bubble_icon_svg', 'welcome_message', 'disclaimer', 'online_text' ),
+		'appearance' => array( 'primary_color', 'secondary_color', 'bg_color', 'text_color', 'bubble_position', 'border_radius', 'bubble_size', 'bubble_style', 'bubble_border_width', 'bubble_border_color', 'custom_css' ),
+		'display'    => array( 'display_mode', 'display_page_ids' ),
+		'advanced'   => array( 'store_transcript', 'request_timeout', 'rate_limit', 'debug_mode' ),
+	);
+
 	/**
 	 * Return translated tab labels, keyed by slug.
 	 *
@@ -86,7 +95,9 @@ final class AI_Chat_Admin_Settings {
 		$tab = isset( $_POST['ai_chat_current_tab'] ) ? sanitize_key( (string) $_POST['ai_chat_current_tab'] ) : 'backend';
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		$clean = AI_Chat_Sanitizer::sanitize_settings( $raw );
+		$existing = AI_Chat_Sanitizer::get_settings();
+		$merged   = $this->merge_tab_settings( $existing, $raw, $tab );
+		$clean    = AI_Chat_Sanitizer::sanitize_settings( $merged );
 
 		update_option( AI_CHAT_OPTION_KEY, $clean );
 
@@ -255,23 +266,51 @@ final class AI_Chat_Admin_Settings {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="ai_chat_company_logo"><?php esc_html_e( 'Company Logo URL', 'ai-chat-plugin' ); ?></label></th>
+				<th scope="row"><label for="ai_chat_company_logo"><?php esc_html_e( 'Company Logo', 'ai-chat-plugin' ); ?></label></th>
 				<td>
 					<input type="url" id="ai_chat_company_logo" name="ai_chat[company_logo]"
 					       value="<?php echo esc_attr( $s['company_logo'] ); ?>" class="regular-text"
 					       placeholder="https://example.com/logo.png" />
-					<p class="description"><?php esc_html_e( 'URL to a square image shown in the chat header (40×40 px recommended).', 'ai-chat-plugin' ); ?></p>
+					<p>
+						<button type="button" class="button ai-chat-media-select" data-target="#ai_chat_company_logo" data-type="image">
+							<?php esc_html_e( 'Select from Media Library', 'ai-chat-plugin' ); ?>
+						</button>
+						<button type="button" class="button ai-chat-media-clear" data-target="#ai_chat_company_logo">
+							<?php esc_html_e( 'Clear', 'ai-chat-plugin' ); ?>
+						</button>
+					</p>
+					<p class="description"><?php esc_html_e( 'Select or upload a square image shown in the chat header (40×40 px recommended).', 'ai-chat-plugin' ); ?></p>
 					<?php if ( ! empty( $s['company_logo'] ) ) : ?>
-						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="" style="height:40px;margin-top:6px;border-radius:50%;" />
+						<img src="<?php echo esc_url( $s['company_logo'] ); ?>" alt="" class="ai-chat-admin-logo-preview" />
 					<?php endif; ?>
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="ai_chat_bubble_icon_svg"><?php esc_html_e( 'Bubble Icon (SVG)', 'ai-chat-plugin' ); ?></label></th>
+				<th scope="row"><label for="ai_chat_bubble_icon_svg_media_url"><?php esc_html_e( 'Bubble Icon (Media SVG)', 'ai-chat-plugin' ); ?></label></th>
+				<td>
+					<input type="url" id="ai_chat_bubble_icon_svg_media_url" name="ai_chat[bubble_icon_svg_media_url]"
+					       value="<?php echo esc_attr( $s['bubble_icon_svg_media_url'] ); ?>" class="regular-text"
+					       placeholder="https://example.com/icon.svg" />
+					<p>
+						<button type="button" class="button ai-chat-media-select" data-target="#ai_chat_bubble_icon_svg_media_url" data-type="image/svg+xml">
+							<?php esc_html_e( 'Select SVG from Media Library', 'ai-chat-plugin' ); ?>
+						</button>
+						<button type="button" class="button ai-chat-media-clear" data-target="#ai_chat_bubble_icon_svg_media_url">
+							<?php esc_html_e( 'Clear', 'ai-chat-plugin' ); ?>
+						</button>
+					</p>
+					<p class="description"><?php esc_html_e( 'Use an SVG from the media library for the chat bubble icon. If set, this is used first.', 'ai-chat-plugin' ); ?></p>
+					<?php if ( ! empty( $s['bubble_icon_svg_media_url'] ) ) : ?>
+						<img src="<?php echo esc_url( $s['bubble_icon_svg_media_url'] ); ?>" alt="" class="ai-chat-admin-icon-preview" />
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="ai_chat_bubble_icon_svg"><?php esc_html_e( 'Bubble Icon (Custom SVG Markup)', 'ai-chat-plugin' ); ?></label></th>
 				<td>
 					<textarea id="ai_chat_bubble_icon_svg" name="ai_chat[bubble_icon_svg]"
 					          rows="6" class="large-text code"><?php echo esc_textarea( $s['bubble_icon_svg'] ); ?></textarea>
-					<p class="description"><?php esc_html_e( 'Paste a safe SVG string for the chat bubble icon. Leave empty to use the default chat icon. SVG is sanitized on save.', 'ai-chat-plugin' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Optional fallback: paste safe inline SVG markup. Used when no media SVG is selected. SVG is sanitized on save.', 'ai-chat-plugin' ); ?></p>
 				</td>
 			</tr>
 			<tr>
@@ -350,6 +389,54 @@ final class AI_Chat_Admin_Settings {
 					       value="<?php echo esc_attr( (string) $s['border_radius'] ); ?>"
 					       min="0" max="50" class="small-text" /> px
 					<p class="description"><?php esc_html_e( 'Rounded corners for the chat panel (0–50).', 'ai-chat-plugin' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="ai_chat_bubble_size"><?php esc_html_e( 'Bubble Size (px)', 'ai-chat-plugin' ); ?></label></th>
+				<td>
+					<input type="number" id="ai_chat_bubble_size" name="ai_chat[bubble_size]"
+					       value="<?php echo esc_attr( (string) $s['bubble_size'] ); ?>"
+					       min="44" max="90" class="small-text" /> px
+					<p class="description"><?php esc_html_e( 'Size of the floating chat bubble (44–90).', 'ai-chat-plugin' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Bubble Shape', 'ai-chat-plugin' ); ?></th>
+				<td>
+					<fieldset>
+						<label>
+							<input type="radio" name="ai_chat[bubble_style]" value="circle"
+							       <?php checked( $s['bubble_style'], 'circle' ); ?> />
+							<?php esc_html_e( 'Circle', 'ai-chat-plugin' ); ?>
+						</label><br>
+						<label>
+							<input type="radio" name="ai_chat[bubble_style]" value="rounded"
+							       <?php checked( $s['bubble_style'], 'rounded' ); ?> />
+							<?php esc_html_e( 'Rounded square', 'ai-chat-plugin' ); ?>
+						</label><br>
+						<label>
+							<input type="radio" name="ai_chat[bubble_style]" value="square"
+							       <?php checked( $s['bubble_style'], 'square' ); ?> />
+							<?php esc_html_e( 'Square', 'ai-chat-plugin' ); ?>
+						</label>
+					</fieldset>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="ai_chat_bubble_border_width"><?php esc_html_e( 'Bubble Border Width (px)', 'ai-chat-plugin' ); ?></label></th>
+				<td>
+					<input type="number" id="ai_chat_bubble_border_width" name="ai_chat[bubble_border_width]"
+					       value="<?php echo esc_attr( (string) $s['bubble_border_width'] ); ?>"
+					       min="0" max="8" class="small-text" /> px
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="ai_chat_bubble_border_color"><?php esc_html_e( 'Bubble Border Color', 'ai-chat-plugin' ); ?></label></th>
+				<td>
+					<input type="text" id="ai_chat_bubble_border_color"
+					       name="ai_chat[bubble_border_color]"
+					       value="<?php echo esc_attr( $s['bubble_border_color'] ); ?>"
+					       class="ai-chat-color-picker" data-default-color="<?php echo esc_attr( $s['bubble_border_color'] ); ?>" />
 				</td>
 			</tr>
 			<tr>
@@ -472,5 +559,35 @@ final class AI_Chat_Admin_Settings {
 			<li><code>ai_chat_api_request_args</code> — <?php esc_html_e( 'Filter wp_remote_post args for outgoing backend requests.', 'ai-chat-plugin' ); ?></li>
 		</ul>
 		<?php
+	}
+
+	/**
+	 * Merge submitted fields from the current tab into existing settings.
+	 *
+	 * @param array<string, mixed> $existing Existing settings.
+	 * @param array<string, mixed> $raw      Raw submitted tab fields.
+	 * @param string               $tab      Current tab slug.
+	 * @return array<string, mixed>
+	 */
+	private function merge_tab_settings( array $existing, array $raw, string $tab ): array {
+		$merged = $existing;
+		$fields = self::TAB_FIELDS[ $tab ] ?? array();
+
+		foreach ( $fields as $field ) {
+			if ( array_key_exists( $field, $raw ) ) {
+				$merged[ $field ] = $raw[ $field ];
+			}
+		}
+
+		// For checkboxes in Advanced tab, missing means intentionally unchecked.
+		if ( 'advanced' === $tab ) {
+			foreach ( array( 'store_transcript', 'debug_mode' ) as $bool_field ) {
+				if ( ! array_key_exists( $bool_field, $raw ) ) {
+					$merged[ $bool_field ] = '';
+				}
+			}
+		}
+
+		return $merged;
 	}
 }

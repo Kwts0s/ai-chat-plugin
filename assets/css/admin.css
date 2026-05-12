@@ -49,6 +49,18 @@
 	display: inline-block;
 }
 
+.ai-chat-admin-logo-preview,
+.ai-chat-admin-icon-preview {
+	display:       block;
+	margin-top:    8px;
+	max-width:     56px;
+	max-height:    56px;
+	border:        1px solid #dcdcde;
+	border-radius: 8px;
+	background:    #fff;
+	padding:       4px;
+}
+
 /* ── Health check ─────────────────────────────────────────────────────────── */
 
 .ai-chat-health-result {
