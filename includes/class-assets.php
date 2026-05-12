@@ -65,7 +65,7 @@ final class AI_Chat_Assets {
 	 * @param string $hook_suffix Current admin page hook.
 	 */
 	public function enqueue_admin( string $hook_suffix ): void {
-		if ( ! str_contains( $hook_suffix, 'ai-chat-settings' ) ) {
+		if ( false === strpos( $hook_suffix, 'ai-chat-settings' ) ) {
 			return;
 		}
 

@@ -40,7 +40,7 @@ final class AI_Chat_API_Client {
 	 * @param string $session_id Session ID.
 	 * @return array{sessionId: string, text: string, channel: string}|WP_Error
 	 */
-	public function send_chat( string $message, string $session_id ): array|WP_Error {
+	public function send_chat( string $message, string $session_id ) {
 		if ( empty( $this->base_url ) ) {
 			return new WP_Error( 'no_backend', __( 'Backend URL is not configured.', 'ai-chat-plugin' ) );
 		}
@@ -77,7 +77,7 @@ final class AI_Chat_API_Client {
 	 *
 	 * @return array<string, mixed>|WP_Error
 	 */
-	public function check_health(): array|WP_Error {
+	public function check_health() {
 		if ( empty( $this->base_url ) ) {
 			return new WP_Error( 'no_backend', __( 'Backend URL is not configured.', 'ai-chat-plugin' ) );
 		}
@@ -110,7 +110,7 @@ final class AI_Chat_API_Client {
 	 * @param string $body JSON body.
 	 * @return array<string, mixed>|WP_Error WordPress response or error.
 	 */
-	private function post( string $path, string $body ): array|WP_Error {
+	private function post( string $path, string $body ) {
 		/**
 		 * Allow developers to modify the outgoing args.
 		 *

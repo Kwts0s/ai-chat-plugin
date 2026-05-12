@@ -107,7 +107,7 @@ final class AI_Chat_Admin_Settings {
 	/** Show admin notice after save. */
 	public function display_notices(): void {
 		$screen = get_current_screen();
-		if ( ! $screen || ! str_contains( $screen->id, 'ai-chat-settings' ) ) {
+		if ( ! $screen || false === strpos( $screen->id, 'ai-chat-settings' ) ) {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification -- just reading a flag.

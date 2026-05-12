@@ -5,7 +5,7 @@
  * Description: A customizable website chatbot widget powered by an external backend API. Supports proxy mode, full branding customization, and secure admin settings.
  * Version:     1.0.0
  * Requires at least: 6.0
- * Requires PHP: 8.0
+ * Requires PHP: 7.4
  * Author:      AI Chat Plugin
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,7 +26,7 @@ define( 'AI_CHAT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_CHAT_URL', plugin_dir_url( __FILE__ ) );
 define( 'AI_CHAT_OPTION_KEY', 'ai_chat_settings' );
 define( 'AI_CHAT_MIN_WP', '6.0' );
-define( 'AI_CHAT_MIN_PHP', '8.0' );
+define( 'AI_CHAT_MIN_PHP', '7.4' );
 
 // ── Load dependencies ───────────────────────────────────────────────────────
 require_once AI_CHAT_DIR . 'includes/class-sanitizer.php';

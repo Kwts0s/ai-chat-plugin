@@ -3,7 +3,7 @@ Contributors:      ai-chat-plugin
 Tags:              chatbot, chat, widget, AI, customer support
 Requires at least: 6.0
 Tested up to:      6.7
-Requires PHP:      8.0
+Requires PHP:      7.4
 Stable tag:        1.0.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -30,7 +30,7 @@ backend URL is never exposed to visitors.
 = Minimum Requirements =
 
 * WordPress 6.0+
-* PHP 8.0+
+* PHP 7.4+
 
 == Installation ==
 
