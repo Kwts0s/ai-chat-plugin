@@ -20,14 +20,29 @@ final class AI_Chat_Admin_Settings {
 	/** Nonce field name. */
 	private const NONCE_NAME = 'ai_chat_settings_nonce';
 
-	/** Available tabs. */
+	/** Available tabs (slug → translation key). */
 	private const TABS = array(
-		'backend'    => 'Backend',
-		'branding'   => 'Branding',
-		'appearance' => 'Appearance',
-		'display'    => 'Display Rules',
-		'advanced'   => 'Advanced',
+		'backend',
+		'branding',
+		'appearance',
+		'display',
+		'advanced',
 	);
+
+	/**
+	 * Return translated tab labels, keyed by slug.
+	 *
+	 * @return array<string, string>
+	 */
+	private function tab_labels(): array {
+		return array(
+			'backend'    => __( 'Backend', 'ai-chat-plugin' ),
+			'branding'   => __( 'Branding', 'ai-chat-plugin' ),
+			'appearance' => __( 'Appearance', 'ai-chat-plugin' ),
+			'display'    => __( 'Display Rules', 'ai-chat-plugin' ),
+			'advanced'   => __( 'Advanced', 'ai-chat-plugin' ),
+		);
+	}
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -62,18 +77,20 @@ final class AI_Chat_Admin_Settings {
 			wp_die( esc_html__( 'You do not have sufficient permissions.', 'ai-chat-plugin' ), 403 );
 		}
 
-		// Nonce check.
+		// Nonce check — check_admin_referer() verifies and dies on failure.
 		check_admin_referer( self::NONCE_ACTION, self::NONCE_NAME );
 
-		// phpcs:ignore WordPress.Security.NonceVerification -- verified above.
+		// All $_POST access below is after nonce verification above.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		$raw = isset( $_POST['ai_chat'] ) && is_array( $_POST['ai_chat'] ) ? $_POST['ai_chat'] : array();
+		$tab = isset( $_POST['ai_chat_current_tab'] ) ? sanitize_key( (string) $_POST['ai_chat_current_tab'] ) : 'backend';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		$clean = AI_Chat_Sanitizer::sanitize_settings( $raw );
 
 		update_option( AI_CHAT_OPTION_KEY, $clean );
 
 		// Redirect back with success.
-		$tab = isset( $_POST['ai_chat_current_tab'] ) ? sanitize_key( (string) $_POST['ai_chat_current_tab'] ) : 'backend';
 		wp_safe_redirect(
 			add_query_arg(
 				array(
@@ -110,9 +127,10 @@ final class AI_Chat_Admin_Settings {
 		}
 
 		$settings    = AI_Chat_Sanitizer::get_settings();
-		// phpcs:ignore WordPress.Security.NonceVerification -- tab is UI state only.
+		$tab_labels  = $this->tab_labels();
+		// phpcs:ignore WordPress.Security.NonceVerification -- tab is UI navigation state only.
 		$current_tab = isset( $_GET['tab'] ) ? sanitize_key( (string) $_GET['tab'] ) : 'backend';
-		if ( ! array_key_exists( $current_tab, self::TABS ) ) {
+		if ( ! in_array( $current_tab, self::TABS, true ) ) {
 			$current_tab = 'backend';
 		}
 
@@ -124,10 +142,10 @@ final class AI_Chat_Admin_Settings {
 			</h1>
 
 			<nav class="nav-tab-wrapper ai-chat-tabs">
-				<?php foreach ( self::TABS as $slug => $label ) : ?>
+				<?php foreach ( self::TABS as $slug ) : ?>
 					<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'ai-chat-settings', 'tab' => $slug ), admin_url( 'admin.php' ) ) ); ?>"
 					   class="nav-tab<?php echo $slug === $current_tab ? ' nav-tab-active' : ''; ?>">
-						<?php echo esc_html( __( $label, 'ai-chat-plugin' ) ); // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText ?>
+						<?php echo esc_html( $tab_labels[ $slug ] ?? $slug ); ?>
 					</a>
 				<?php endforeach; ?>
 			</nav>

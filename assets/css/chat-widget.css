@@ -469,5 +469,12 @@
 /* ── Noscript fallback ───────────────────────────────────────────────────── */
 
 .ai-chat-noscript {
-	display:  none; /* Hidden by default; shown when JS is disabled by browser. */
+	display:    block;
+	padding:    12px;
+	background: #fef9c3;
+	color:      #713f12;
+	border:     1px solid #fde047;
+	border-radius: 6px;
+	font-size:  14px;
+	margin:     8px;
 }

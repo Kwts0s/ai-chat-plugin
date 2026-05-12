@@ -301,7 +301,8 @@ final class AI_Chat_REST_Controller {
 		);
 
 		foreach ( $candidates as $key ) {
-			$value = $_SERVER[ $key ] ?? '';
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized below via filter_var.
+			$value = isset( $_SERVER[ $key ] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER[ $key ] ) ) : '';
 			if ( '' === $value ) {
 				continue;
 			}

@@ -183,7 +183,7 @@ final class AI_Chat_Sanitizer {
 
 		$dom = new DOMDocument();
 		libxml_use_internal_errors( true );
-		$dom->loadXML( $svg, LIBXML_NOERROR | LIBXML_NOWARNING );
+		$dom->loadXML( $svg, LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_NONET );
 		libxml_clear_errors();
 
 		if ( ! $dom->documentElement ) {
