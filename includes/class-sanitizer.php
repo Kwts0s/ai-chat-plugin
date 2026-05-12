@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class AI_Chat_Sanitizer {
 
+	/** Allowed bubble styles. */
+	private const ALLOWED_BUBBLE_STYLES = array( 'circle', 'rounded', 'square' );
+
 	// ── Default settings ────────────────────────────────────────────────────
 
 	/**
@@ -121,7 +124,7 @@ final class AI_Chat_Sanitizer {
 			: $defaults['bubble_size'];
 
 		// Bubble style.
-		$clean['bubble_style'] = in_array( $input['bubble_style'] ?? '', array( 'circle', 'rounded', 'square' ), true )
+		$clean['bubble_style'] = in_array( $input['bubble_style'] ?? '', self::allowed_bubble_styles(), true )
 			? $input['bubble_style']
 			: $defaults['bubble_style'];
 
@@ -288,6 +291,15 @@ final class AI_Chat_Sanitizer {
 	 */
 	public static function is_valid_hex_color( string $color ): bool {
 		return (bool) preg_match( '/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $color );
+	}
+
+	/**
+	 * Return allowed bubble style values.
+	 *
+	 * @return string[]
+	 */
+	public static function allowed_bubble_styles(): array {
+		return self::ALLOWED_BUBBLE_STYLES;
 	}
 
 	/**

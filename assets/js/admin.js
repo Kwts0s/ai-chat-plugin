@@ -32,8 +32,9 @@
 				return;
 			}
 
+			var mediaTitle = ( aiChatAdmin && aiChatAdmin.i18n && aiChatAdmin.i18n.selectMedia ) ? aiChatAdmin.i18n.selectMedia : '';
 			var frameConfig = {
-				title:    ( aiChatAdmin && aiChatAdmin.i18n && aiChatAdmin.i18n.selectMedia ) ? aiChatAdmin.i18n.selectMedia : 'Select media',
+				title:    mediaTitle,
 				multiple: false,
 				library:  { type: mediaType },
 			};
