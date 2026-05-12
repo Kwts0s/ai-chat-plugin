@@ -29,7 +29,12 @@ final class AI_Chat_Admin_Settings {
 		'advanced',
 	);
 
-	/** Tab field map used to preserve non-active tab values on save. */
+	/**
+	 * Tab field map used to preserve non-active tab values on save.
+	 *
+	 * Since only one tab's inputs are rendered at a time, this map ensures
+	 * saving one tab updates only that tab's fields and keeps other tab values.
+	 */
 	private const TAB_FIELDS = array(
 		'backend'    => array( 'backend_url', 'connection_mode' ),
 		'branding'   => array( 'company_name', 'company_subtitle', 'company_logo', 'bubble_icon_svg_media_url', 'bubble_icon_svg', 'welcome_message', 'disclaimer', 'online_text' ),

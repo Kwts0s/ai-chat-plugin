@@ -97,6 +97,7 @@ final class AI_Chat_Assets {
 					'connected'  => __( 'Connected ✓', 'ai-chat-plugin' ),
 					'failed'     => __( 'Connection failed', 'ai-chat-plugin' ),
 					'noUrl'      => __( 'Please enter a backend URL first.', 'ai-chat-plugin' ),
+					'selectMedia'=> __( 'Select media', 'ai-chat-plugin' ),
 				),
 			)
 		);

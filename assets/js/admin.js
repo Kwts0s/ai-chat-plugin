@@ -33,7 +33,7 @@
 			}
 
 			var frameConfig = {
-				title:    'Select Media',
+				title:    ( aiChatAdmin && aiChatAdmin.i18n && aiChatAdmin.i18n.selectMedia ) ? aiChatAdmin.i18n.selectMedia : 'Select media',
 				multiple: false,
 				library:  { type: mediaType },
 			};

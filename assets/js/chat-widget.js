@@ -335,7 +335,12 @@
 			bubble.setAttribute( 'aria-controls', 'ai-chat-panel' );
 
 			if ( cfg.bubbleIconUrl ) {
-				bubble.innerHTML = '<img class="ai-chat-bubble-icon-img" src="' + escHtml( cfg.bubbleIconUrl ) + '" alt="" aria-hidden="true" />';
+				var bubbleIconImg = document.createElement( 'img' );
+				bubbleIconImg.className = 'ai-chat-bubble-icon-img';
+				bubbleIconImg.src = String( cfg.bubbleIconUrl );
+				bubbleIconImg.alt = '';
+				bubbleIconImg.setAttribute( 'aria-hidden', 'true' );
+				bubble.appendChild( bubbleIconImg );
 			} else {
 				bubble.innerHTML = cfg.bubbleIcon || this.defaultIcon();
 			}
