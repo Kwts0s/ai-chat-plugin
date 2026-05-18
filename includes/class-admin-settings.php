@@ -37,7 +37,7 @@ final class AI_Chat_Admin_Settings {
 	 */
 	private const TAB_FIELDS = array(
 		'backend'    => array( 'backend_url', 'connection_mode' ),
-		'branding'   => array( 'company_name', 'company_subtitle', 'company_logo', 'bubble_icon_svg_media_url', 'bubble_icon_svg', 'welcome_message', 'disclaimer', 'online_text' ),
+		'branding'   => array( 'company_name', 'company_subtitle', 'company_logo', 'bubble_icon_svg_media_url', 'bubble_icon_svg', 'welcome_message', 'ready_question_1', 'ready_question_2', 'ready_question_3', 'disclaimer', 'online_text' ),
 		'appearance' => array( 'primary_color', 'secondary_color', 'bg_color', 'text_color', 'bubble_position', 'border_radius', 'bubble_size', 'bubble_style', 'bubble_border_width', 'bubble_border_color', 'custom_css' ),
 		'display'    => array( 'display_mode', 'display_page_ids' ),
 		'advanced'   => array( 'store_transcript', 'request_timeout', 'rate_limit', 'debug_mode' ),
@@ -332,6 +332,22 @@ final class AI_Chat_Admin_Settings {
 					<input type="text" id="ai_chat_welcome_message" name="ai_chat[welcome_message]"
 					       value="<?php echo esc_attr( $s['welcome_message'] ); ?>" class="large-text" />
 					<p class="description"><?php esc_html_e( 'First message shown when the chat opens.', 'ai-chat-plugin' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Ready-to-use Questions', 'ai-chat-plugin' ); ?></th>
+				<td>
+					<input type="text" id="ai_chat_ready_question_1" name="ai_chat[ready_question_1]"
+					       value="<?php echo esc_attr( $s['ready_question_1'] ); ?>" class="large-text" />
+					<p class="description"><?php esc_html_e( 'Question 1 shown as a clickable suggestion in the chat widget.', 'ai-chat-plugin' ); ?></p>
+
+					<input type="text" id="ai_chat_ready_question_2" name="ai_chat[ready_question_2]"
+					       value="<?php echo esc_attr( $s['ready_question_2'] ); ?>" class="large-text" />
+					<p class="description"><?php esc_html_e( 'Question 2 shown as a clickable suggestion in the chat widget.', 'ai-chat-plugin' ); ?></p>
+
+					<input type="text" id="ai_chat_ready_question_3" name="ai_chat[ready_question_3]"
+					       value="<?php echo esc_attr( $s['ready_question_3'] ); ?>" class="large-text" />
+					<p class="description"><?php esc_html_e( 'Question 3 shown as a clickable suggestion in the chat widget.', 'ai-chat-plugin' ); ?></p>
 				</td>
 			</tr>
 			<tr>

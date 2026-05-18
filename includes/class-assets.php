@@ -153,6 +153,16 @@ final class AI_Chat_Assets {
 			'bubbleIconUrl'   => esc_url( $settings['bubble_icon_svg_media_url'] ),
 			'bubbleIcon'      => $settings['bubble_icon_svg'], // Already sanitized SVG.
 			'welcomeMessage'  => esc_html( $settings['welcome_message'] ),
+			'readyQuestions'  => array_values(
+				array_filter(
+					array(
+						esc_html( $settings['ready_question_1'] ),
+						esc_html( $settings['ready_question_2'] ),
+						esc_html( $settings['ready_question_3'] ),
+					),
+					static fn( string $question ): bool => '' !== trim( $question )
+				)
+			),
 			'disclaimer'      => esc_html( $settings['disclaimer'] ),
 			'onlineText'      => esc_html( $settings['online_text'] ),
 			'bubblePosition'  => $settings['bubble_position'],
@@ -166,6 +176,7 @@ final class AI_Chat_Assets {
 				'placeholder'=> __( 'Type a message…', 'ai-chat-plugin' ),
 				'inputLabel' => __( 'Message input', 'ai-chat-plugin' ),
 				'messages'   => __( 'Chat messages', 'ai-chat-plugin' ),
+				'readyQuestions' => __( 'Ready to use questions', 'ai-chat-plugin' ),
 				'timeout'    => __( 'Request timed out. Please try again.', 'ai-chat-plugin' ),
 				'error'      => __( 'An error occurred. Please try again.', 'ai-chat-plugin' ),
 				'reset'      => __( 'Clear conversation', 'ai-chat-plugin' ),

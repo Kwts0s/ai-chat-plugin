@@ -34,6 +34,9 @@ final class AI_Chat_Sanitizer {
 			'bubble_icon_svg_media_url' => '',
 			'bubble_icon_svg'  => '',
 			'welcome_message'  => 'Hello! How can I help you today?',
+			'ready_question_1' => 'What services do you offer?',
+			'ready_question_2' => 'How can I contact support?',
+			'ready_question_3' => 'Can you help me get started?',
 			'disclaimer'       => __( 'This chat is powered by AI. Responses may not always be accurate.', 'ai-chat-plugin' ),
 			'online_text'      => 'Online',
 			'primary_color'    => '#4f46e5',
@@ -82,7 +85,7 @@ final class AI_Chat_Sanitizer {
 			: $defaults['connection_mode'];
 
 		// Text fields.
-		foreach ( array( 'company_name', 'company_subtitle', 'welcome_message', 'disclaimer', 'online_text' ) as $field ) {
+		foreach ( array( 'company_name', 'company_subtitle', 'welcome_message', 'ready_question_1', 'ready_question_2', 'ready_question_3', 'disclaimer', 'online_text' ) as $field ) {
 			$clean[ $field ] = isset( $input[ $field ] )
 				? sanitize_text_field( $input[ $field ] )
 				: $defaults[ $field ];

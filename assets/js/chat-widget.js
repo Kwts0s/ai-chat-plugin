@@ -290,6 +290,7 @@
 			input:    null,
 			sendBtn:  null,
 			closeBtn: null,
+			readyButtons: [],
 		},
 		isOpen:    false,
 		isLoading: false,
@@ -373,6 +374,7 @@
 			this.el.input    = panel.querySelector( '.ai-chat-input' );
 			this.el.sendBtn  = panel.querySelector( '.ai-chat-send-btn' );
 			this.el.closeBtn = panel.querySelector( '.ai-chat-close-btn' );
+			this.el.readyButtons = panel.querySelectorAll( '.ai-chat-ready-question' );
 		},
 
 		panelHTML: function () {
@@ -382,6 +384,17 @@
 
 			var disclaimerHtml = cfg.disclaimer
 				? '<p class="ai-chat-disclaimer">' + escHtml( cfg.disclaimer ) + '</p>'
+				: '';
+			var readyQuestions = Array.isArray( cfg.readyQuestions ) ? cfg.readyQuestions : [];
+			var readyQuestionsLabel = ( cfg.i18n && cfg.i18n.readyQuestions ) || 'Ready to use questions';
+			var readyQuestionsHtml = readyQuestions.length
+				? '<div class="ai-chat-ready-questions" aria-label="' + escHtml( readyQuestionsLabel ) + '">'
+					+ '<p class="ai-chat-ready-questions-title">' + escHtml( readyQuestionsLabel ) + '</p>'
+					+ readyQuestions.map( function ( question ) {
+						return '<button class="ai-chat-ready-question" type="button" data-question="'
+							+ escHtml( question ) + '">' + escHtml( question ) + '</button>';
+					} ).join( '' )
+					+ '</div>'
 				: '';
 
 			var closeLbl  = ( cfg.i18n && cfg.i18n.close )       || 'Close chat';
@@ -417,6 +430,7 @@
 				+ '</div>'
 				+ '<div class="ai-chat-messages" role="log" aria-live="polite" aria-label="' + escHtml( msgLbl ) + '"></div>'
 				+ '<div class="ai-chat-input-area">'
+				+   readyQuestionsHtml
 				+   '<div class="ai-chat-input-row">'
 				+     '<textarea class="ai-chat-input" rows="1"'
 				+       ' placeholder="' + escHtml( placeholder ) + '"'
@@ -453,6 +467,16 @@
 			} );
 
 			this.el.sendBtn.addEventListener( 'click', function () { self.handleSend(); } );
+			Array.prototype.forEach.call( this.el.readyButtons, function ( button ) {
+				button.addEventListener( 'click', function () {
+					if ( self.isLoading ) {
+						return;
+					}
+
+					var question = button.getAttribute( 'data-question' ) || '';
+					self.sendMessage( question );
+				} );
+			} );
 
 			// ESC closes the panel and returns focus to the bubble.
 			document.addEventListener( 'keydown', function ( e ) {
@@ -501,17 +525,22 @@
 
 		handleSend: function () {
 			var message = this.el.input.value.trim();
-			if ( ! message || this.isLoading ) { return; }
+			this.sendMessage( message );
+		},
+
+		sendMessage: function ( message ) {
+			var trimmedMessage = String( message || '' ).trim();
+			if ( ! trimmedMessage || this.isLoading ) { return; }
 
 			this.el.input.value     = '';
 			this.el.input.style.height = 'auto';
 			this.el.sendBtn.disabled   = true;
 
-			this.addMessage( 'user', message );
+			this.addMessage( 'user', trimmedMessage );
 			this.setLoading( true );
 
 			var self = this;
-			API.send( message ).then( function ( data ) {
+			API.send( trimmedMessage ).then( function ( data ) {
 				self.removeTyping();
 				self.addMessage( 'bot', ( data && data.text ) ? data.text : '' );
 			} ).catch( function ( err ) {
@@ -571,6 +600,9 @@
 		setLoading: function ( loading ) {
 			this.isLoading = loading;
 			this.el.sendBtn.disabled = loading || ! this.el.input.value.trim();
+			Array.prototype.forEach.call( this.el.readyButtons, function ( button ) {
+				button.disabled = loading;
+			} );
 			if ( loading ) { this.showTyping(); }
 		},
 
