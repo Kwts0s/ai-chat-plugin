@@ -342,6 +342,15 @@
 	margin-bottom: 12px;
 }
 
+.ai-chat-ready-questions-wrap {
+	width:       100%;
+	align-self:  flex-start;
+}
+
+.ai-chat-ready-questions-wrap .ai-chat-ready-questions {
+	margin-bottom: 4px;
+}
+
 .ai-chat-ready-questions-title {
 	width:          100%;
 	margin:         0 0 2px;
@@ -378,6 +387,27 @@
 .ai-chat-ready-question:disabled {
 	opacity: .55;
 	cursor:  wait;
+}
+
+@media (min-width: 1025px) {
+	.ai-chat-panel {
+		height: var(--ai-chat-panel-h);
+	}
+
+	.ai-chat-ready-questions-wrap {
+		min-height: 110px;
+	}
+
+	.ai-chat-ready-questions-wrap--hidden {
+		visibility:     hidden;
+		pointer-events: none;
+	}
+}
+
+@media (max-width: 1024px) {
+	.ai-chat-ready-questions-wrap--hidden {
+		display: none;
+	}
 }
 
 .ai-chat-input-row {
