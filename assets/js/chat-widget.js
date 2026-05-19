@@ -290,10 +290,11 @@
 			input:    null,
 			sendBtn:  null,
 			closeBtn: null,
-			readyButtons: [],
+			readyQuestionsWrap: null,
 		},
 		isOpen:    false,
 		isLoading: false,
+		readyQuestionsDismissed: false,
 
 		// ── Init ────────────────────────────────────────────────────────────────
 
@@ -304,6 +305,9 @@
 
 			// Restore transcript.
 			Transcript.load();
+			this.readyQuestionsDismissed = Transcript.messages.some( function ( m ) {
+				return m && m.role === 'user';
+			} );
 			var self = this;
 			Transcript.messages.forEach( function ( m ) {
 				self.addMessage( m.role, m.text, false );
@@ -374,7 +378,6 @@
 			this.el.input    = panel.querySelector( '.ai-chat-input' );
 			this.el.sendBtn  = panel.querySelector( '.ai-chat-send-btn' );
 			this.el.closeBtn = panel.querySelector( '.ai-chat-close-btn' );
-			this.el.readyButtons = panel.querySelectorAll( '.ai-chat-ready-question' );
 		},
 
 		panelHTML: function () {
@@ -385,18 +388,6 @@
 			var disclaimerHtml = cfg.disclaimer
 				? '<p class="ai-chat-disclaimer">' + escHtml( cfg.disclaimer ) + '</p>'
 				: '';
-			var readyQuestions = Array.isArray( cfg.readyQuestions ) ? cfg.readyQuestions : [];
-			var readyQuestionsLabel = ( cfg.i18n && cfg.i18n.readyQuestions ) || 'Ready to use questions';
-			var readyQuestionsHtml = readyQuestions.length
-				? '<div class="ai-chat-ready-questions" aria-label="' + escHtml( readyQuestionsLabel ) + '">'
-					+ '<p class="ai-chat-ready-questions-title">' + escHtml( readyQuestionsLabel ) + '</p>'
-					+ readyQuestions.map( function ( question ) {
-						return '<button class="ai-chat-ready-question" type="button" data-question="'
-							+ escHtml( question ) + '">' + escHtml( question ) + '</button>';
-					} ).join( '' )
-					+ '</div>'
-				: '';
-
 			var closeLbl  = ( cfg.i18n && cfg.i18n.close )       || 'Close chat';
 			var msgLbl    = ( cfg.i18n && cfg.i18n.messages )     || 'Chat messages';
 			var inputLbl  = ( cfg.i18n && cfg.i18n.inputLabel )   || 'Message input';
@@ -430,7 +421,6 @@
 				+ '</div>'
 				+ '<div class="ai-chat-messages" role="log" aria-live="polite" aria-label="' + escHtml( msgLbl ) + '"></div>'
 				+ '<div class="ai-chat-input-area">'
-				+   readyQuestionsHtml
 				+   '<div class="ai-chat-input-row">'
 				+     '<textarea class="ai-chat-input" rows="1"'
 				+       ' placeholder="' + escHtml( placeholder ) + '"'
@@ -467,15 +457,14 @@
 			} );
 
 			this.el.sendBtn.addEventListener( 'click', function () { self.handleSend(); } );
-			Array.prototype.forEach.call( this.el.readyButtons, function ( button ) {
-				button.addEventListener( 'click', function () {
-					if ( self.isLoading ) {
-						return;
-					}
-
-					var question = button.getAttribute( 'data-question' ) || '';
-					self.sendMessage( question );
-				} );
+			this.el.panel.addEventListener( 'click', function ( e ) {
+				var button = e.target && e.target.closest ? e.target.closest( '.ai-chat-ready-question' ) : null;
+				if ( ! button || ! self.el.panel.contains( button ) || self.isLoading ) {
+					return;
+				}
+				var question = button.getAttribute( 'data-question' ) || '';
+				self.dismissReadyQuestions();
+				self.sendMessage( question );
 			} );
 
 			// ESC closes the panel and returns focus to the bubble.
@@ -516,6 +505,9 @@
 
 		onInputChange: function () {
 			var val = this.el.input.value.trim();
+			if ( val && ! this.readyQuestionsDismissed ) {
+				this.dismissReadyQuestions();
+			}
 			this.el.sendBtn.disabled = ( ! val || this.isLoading );
 
 			// Auto-resize the textarea.
@@ -572,10 +564,49 @@
 
 			msgEl.appendChild( bubble );
 			this.el.messages.appendChild( msgEl );
+			if ( role === 'bot' ) {
+				this.ensureReadyQuestionsAfterFirstBotMessage( msgEl );
+			}
 
 			Transcript.add( role, text );
 
 			if ( scroll ) { this.scrollToBottom(); }
+		},
+
+		ensureReadyQuestionsAfterFirstBotMessage: function ( anchorMessageEl ) {
+			var readyQuestions = Array.isArray( cfg.readyQuestions ) ? cfg.readyQuestions : [];
+			var self = this;
+			if ( ! readyQuestions.length || this.el.readyQuestionsWrap || this.readyQuestionsDismissed ) {
+				return;
+			}
+
+			var readyQuestionsLabel = ( cfg.i18n && cfg.i18n.readyQuestions ) || 'Ready to use questions';
+			var wrap = document.createElement( 'div' );
+			wrap.className = 'ai-chat-ready-questions-wrap';
+			wrap.innerHTML = '<div class="ai-chat-ready-questions" aria-label="' + escHtml( readyQuestionsLabel ) + '">'
+				+ '<p class="ai-chat-ready-questions-title">' + escHtml( readyQuestionsLabel ) + '</p>'
+				+ readyQuestions.map( function ( question ) {
+					return '<button class="ai-chat-ready-question" type="button" data-question="'
+						+ escHtml( question ) + '">' + escHtml( question ) + '</button>';
+				} ).join( '' )
+				+ '</div>';
+
+			anchorMessageEl.insertAdjacentElement( 'afterend', wrap );
+			this.el.readyQuestionsWrap = wrap;
+			if ( this.readyQuestionsDismissed ) {
+				self.dismissReadyQuestions();
+			}
+		},
+
+		dismissReadyQuestions: function () {
+			if ( this.readyQuestionsDismissed ) {
+				return;
+			}
+
+			this.readyQuestionsDismissed = true;
+			if ( this.el.readyQuestionsWrap ) {
+				this.el.readyQuestionsWrap.classList.add( 'ai-chat-ready-questions-wrap--hidden' );
+			}
 		},
 
 		/**
@@ -600,7 +631,7 @@
 		setLoading: function ( loading ) {
 			this.isLoading = loading;
 			this.el.sendBtn.disabled = loading || ! this.el.input.value.trim();
-			Array.prototype.forEach.call( this.el.readyButtons, function ( button ) {
+			Array.prototype.forEach.call( this.el.panel.querySelectorAll( '.ai-chat-ready-question' ), function ( button ) {
 				button.disabled = loading;
 			} );
 			if ( loading ) { this.showTyping(); }
