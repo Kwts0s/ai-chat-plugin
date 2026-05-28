@@ -19,7 +19,7 @@ backend URL is never exposed to visitors.
 = Key features =
 
 * 🔒 **Proxy mode** (default) — messages are routed through WordPress, backend URL stays private
-* 🎨 **Full branding** — company name, logo, colors, subtitle, disclaimer, welcome message, ready-to-use questions, and media-based logo/SVG icon selection
+* 🎨 **Full branding** — company name, logo, colors, subtitle, disclaimer, welcome message, ready-to-use questions, and media-based logo/image icon selection
 * 📱 **Responsive** — full-screen on mobile, elegant panel on desktop
 * ♿ **Accessible** — ARIA roles, keyboard navigation, ESC to close
 * 🌍 **RTL-ready** — CSS structure supports right-to-left languages
