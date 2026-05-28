@@ -3,7 +3,7 @@
  * Plugin Name: AI Chatbot Plugin
  * Plugin URI:  https://github.com/Kwts0s/ai-chat-plugin
  * Description: A customizable website chatbot widget powered by an external backend API. Supports proxy mode, full branding customization, and secure admin settings.
- * Version:     1.2.0
+ * Version:     1.2.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      Advance Services Web
