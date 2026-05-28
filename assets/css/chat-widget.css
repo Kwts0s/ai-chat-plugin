@@ -9,12 +9,12 @@
 /* ── CSS custom-property defaults ───────────────────────────────────────── */
 
 :root {
-	--ai-chat-primary:       #4f46e5;
-	--ai-chat-secondary:     #818cf8;
+	--ai-chat-primary:       #193b7a;
+	--ai-chat-secondary:     #d91f3d;
 	--ai-chat-bg:            #f8fafc;
 	--ai-chat-text:          #1e293b;
-	--ai-chat-radius:        16px;
-	--ai-chat-bubble-size:   58px;
+	--ai-chat-radius:        10px;
+	--ai-chat-bubble-size:   55px;
 	--ai-chat-panel-w:       380px;
 	--ai-chat-panel-h:       600px;
 	--ai-chat-shadow:        0 8px 32px rgba(0, 0, 0, .18);
