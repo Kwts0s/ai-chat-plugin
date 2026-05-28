@@ -290,6 +290,7 @@
 			input:    null,
 			sendBtn:  null,
 			closeBtn: null,
+			welcomeMessage: null,
 			readyQuestionsWrap: null,
 		},
 		isOpen:    false,
@@ -315,7 +316,10 @@
 
 			// Show welcome message only if there is no transcript.
 			if ( ! Transcript.messages.length && cfg.welcomeMessage ) {
-				this.addMessage( 'bot', cfg.welcomeMessage, false );
+				this.addMessage( 'bot', cfg.welcomeMessage, false, {
+					isWelcome: true,
+					persist: false,
+				} );
 			}
 
 			// Handle shortcode trigger buttons.
@@ -463,7 +467,6 @@
 					return;
 				}
 				var question = button.getAttribute( 'data-question' ) || '';
-				self.dismissReadyQuestions();
 				self.sendMessage( question );
 			} );
 
@@ -505,9 +508,6 @@
 
 		onInputChange: function () {
 			var val = this.el.input.value.trim();
-			if ( val && ! this.readyQuestionsDismissed ) {
-				this.dismissReadyQuestions();
-			}
 			this.el.sendBtn.disabled = ( ! val || this.isLoading );
 
 			// Auto-resize the textarea.
@@ -523,6 +523,7 @@
 		sendMessage: function ( message ) {
 			var trimmedMessage = String( message || '' ).trim();
 			if ( ! trimmedMessage || this.isLoading ) { return; }
+			this.dismissReadyQuestions();
 
 			this.el.input.value     = '';
 			this.el.input.style.height = 'auto';
@@ -551,11 +552,16 @@
 		 * @param {string}  text   Message text.
 		 * @param {boolean} scroll Whether to scroll to bottom.
 		 */
-		addMessage: function ( role, text, scroll ) {
+		addMessage: function ( role, text, scroll, options ) {
 			if ( scroll === undefined ) { scroll = true; }
+			options = options || {};
 
 			var msgEl  = document.createElement( 'div' );
 			msgEl.className = 'ai-chat-message ai-chat-message--' + role;
+			if ( options.isWelcome ) {
+				msgEl.classList.add( 'ai-chat-message--welcome' );
+				this.el.welcomeMessage = msgEl;
+			}
 			msgEl.setAttribute( 'role', 'article' );
 
 			var bubble = document.createElement( 'div' );
@@ -568,7 +574,9 @@
 				this.ensureReadyQuestionsAfterFirstBotMessage( msgEl );
 			}
 
-			Transcript.add( role, text );
+			if ( options.persist !== false ) {
+				Transcript.add( role, text );
+			}
 
 			if ( scroll ) { this.scrollToBottom(); }
 		},
@@ -591,7 +599,13 @@
 				} ).join( '' )
 				+ '</div>';
 
-			anchorMessageEl.insertAdjacentElement( 'afterend', wrap );
+			var anchorBubble = anchorMessageEl.querySelector( '.ai-chat-message-bubble' );
+			if ( anchorMessageEl.classList.contains( 'ai-chat-message--welcome' ) && anchorBubble ) {
+				wrap.classList.add( 'ai-chat-ready-questions-wrap--inside-welcome' );
+				anchorBubble.appendChild( wrap );
+			} else {
+				anchorMessageEl.insertAdjacentElement( 'afterend', wrap );
+			}
 			this.el.readyQuestionsWrap = wrap;
 			if ( this.readyQuestionsDismissed ) {
 				self.dismissReadyQuestions();
@@ -606,6 +620,9 @@
 			this.readyQuestionsDismissed = true;
 			if ( this.el.readyQuestionsWrap ) {
 				this.el.readyQuestionsWrap.classList.add( 'ai-chat-ready-questions-wrap--hidden' );
+			}
+			if ( this.el.welcomeMessage ) {
+				this.el.welcomeMessage.classList.add( 'ai-chat-message--hidden' );
 			}
 		},
 
