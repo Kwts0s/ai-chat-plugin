@@ -35,14 +35,14 @@ final class AI_Chat_Assets {
 			'ai-chat-widget',
 			AI_CHAT_URL . 'assets/css/chat-widget.css',
 			array(),
-			AI_CHAT_VERSION
+			$this->asset_version( 'assets/css/chat-widget.css' )
 		);
 
 		wp_enqueue_script(
 			'ai-chat-widget',
 			AI_CHAT_URL . 'assets/js/chat-widget.js',
 			array(),
-			AI_CHAT_VERSION,
+			$this->asset_version( 'assets/js/chat-widget.js' ),
 			true // Load in footer.
 		);
 
@@ -75,14 +75,14 @@ final class AI_Chat_Assets {
 			'ai-chat-admin',
 			AI_CHAT_URL . 'assets/css/admin.css',
 			array( 'wp-color-picker' ),
-			AI_CHAT_VERSION
+			$this->asset_version( 'assets/css/admin.css' )
 		);
 
 		wp_enqueue_script(
 			'ai-chat-admin',
 			AI_CHAT_URL . 'assets/js/admin.js',
 			array( 'wp-color-picker', 'jquery' ),
-			AI_CHAT_VERSION,
+			$this->asset_version( 'assets/js/admin.js' ),
 			true
 		);
 
@@ -104,6 +104,25 @@ final class AI_Chat_Assets {
 	}
 
 	// ── Helpers ─────────────────────────────────────────────────────────────
+
+	/**
+	 * Return a cache-busting asset version.
+	 *
+	 * @param string $relative_path Path relative to the plugin root.
+	 * @return int|string
+	 */
+	private function asset_version( string $relative_path ) {
+		$absolute_path = AI_CHAT_DIR . ltrim( $relative_path, '/' );
+
+		if ( file_exists( $absolute_path ) ) {
+			$mtime = filemtime( $absolute_path );
+			if ( false !== $mtime ) {
+				return $mtime;
+			}
+		}
+
+		return AI_CHAT_VERSION;
+	}
 
 	/**
 	 * Decide whether the widget should be loaded on the current page.

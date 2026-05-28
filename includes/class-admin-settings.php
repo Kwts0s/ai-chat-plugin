@@ -299,20 +299,20 @@ final class AI_Chat_Admin_Settings {
 				</td>
 			</tr>
 			<tr>
-				<th scope="row"><label for="ai_chat_bubble_icon_svg_media_url"><?php esc_html_e( 'Bubble Icon (Media SVG)', 'ai-chat-plugin' ); ?></label></th>
+				<th scope="row"><label for="ai_chat_bubble_icon_svg_media_url"><?php esc_html_e( 'Bubble Icon (Media Image)', 'ai-chat-plugin' ); ?></label></th>
 				<td>
 					<input type="url" id="ai_chat_bubble_icon_svg_media_url" name="ai_chat[bubble_icon_svg_media_url]"
 					       value="<?php echo esc_attr( $s['bubble_icon_svg_media_url'] ); ?>" class="regular-text"
-					       placeholder="https://example.com/icon.svg" />
+					       placeholder="https://example.com/icon.png" />
 					<p>
-						<button type="button" class="button ai-chat-media-select" data-target="#ai_chat_bubble_icon_svg_media_url" data-type="image/svg+xml">
-							<?php esc_html_e( 'Select SVG from Media Library', 'ai-chat-plugin' ); ?>
+						<button type="button" class="button ai-chat-media-select" data-target="#ai_chat_bubble_icon_svg_media_url" data-type="image">
+							<?php esc_html_e( 'Select Image from Media Library', 'ai-chat-plugin' ); ?>
 						</button>
 						<button type="button" class="button ai-chat-media-clear" data-target="#ai_chat_bubble_icon_svg_media_url">
 							<?php esc_html_e( 'Clear', 'ai-chat-plugin' ); ?>
 						</button>
 					</p>
-					<p class="description"><?php esc_html_e( 'Use an SVG from the media library for the chat bubble icon. If set, this is used first.', 'ai-chat-plugin' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Use a PNG, SVG, or other image from the media library for the chat bubble icon. If set, this is used first.', 'ai-chat-plugin' ); ?></p>
 					<?php if ( ! empty( $s['bubble_icon_svg_media_url'] ) ) : ?>
 						<img src="<?php echo esc_url( $s['bubble_icon_svg_media_url'] ); ?>" alt="<?php esc_attr_e( 'Preview of chat bubble icon', 'ai-chat-plugin' ); ?>" class="ai-chat-admin-icon-preview" />
 					<?php endif; ?>

@@ -9,7 +9,7 @@ A production-ready WordPress plugin that adds a fully customizable chatbot widge
 | Feature | Details |
 |---------|---------|
 | 🔒 **Proxy mode** | WordPress proxies messages to your backend — the backend URL is never exposed to visitors |
-| 🎨 **Full branding** | Company name, logo, colors, subtitle, disclaimer, welcome message, ready-to-use questions, media-based logo/SVG icon selection — all configurable without code |
+| 🎨 **Full branding** | Company name, logo, colors, subtitle, disclaimer, welcome message, ready-to-use questions, media-based logo/image icon selection — all configurable without code |
 | 📱 **Responsive** | Full-screen modal on mobile, floating panel on desktop |
 | ♿ **Accessible** | ARIA roles, keyboard navigation (Enter to send, Shift+Enter for newline, ESC to close), focus management |
 | 🌍 **RTL-ready** | CSS structure supports right-to-left languages |
@@ -80,7 +80,7 @@ Navigate to **AI Chat → Settings** and configure each tab:
 | Tab | Settings |
 |-----|---------|
 | **Backend** | Base URL, connection mode (proxy/direct), test-connection button |
-| **Branding** | Company name, subtitle, logo (URL or media library), bubble icon (media SVG or inline SVG), welcome message, three ready-to-use questions, disclaimer, online-status label |
+| **Branding** | Company name, subtitle, logo (URL or media library), bubble icon (media image or inline SVG), welcome message, three ready-to-use questions, disclaimer, online-status label |
 | **Appearance** | Primary color, secondary/accent color, widget background, text color, bubble position, border radius, bubble size, bubble shape, bubble border color/width, custom CSS |
 | **Display Rules** | Global / selected pages / shortcode-only mode; comma-separated page/post IDs |
 | **Advanced** | Store transcript in localStorage, request timeout, rate limit, debug mode |

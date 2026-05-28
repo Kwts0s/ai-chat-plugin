@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Plugin constants ────────────────────────────────────────────────────────
-define( 'AI_CHAT_VERSION', '1.0.0' );
+define( 'AI_CHAT_VERSION', '1.2.0' );
 define( 'AI_CHAT_FILE', __FILE__ );
 define( 'AI_CHAT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_CHAT_URL', plugin_dir_url( __FILE__ ) );
