@@ -385,9 +385,7 @@
 		},
 
 		panelHTML: function () {
-			var logoHtml = cfg.logoUrl
-				? '<img src="' + escHtml( cfg.logoUrl ) + '" alt="' + escHtml( cfg.companyName || '' ) + '" class="ai-chat-logo" />'
-				: '<div class="ai-chat-logo-placeholder" aria-hidden="true"></div>';
+			var logoHtml = this.brandIconHTML();
 
 			var disclaimerHtml = cfg.disclaimer
 				? '<p class="ai-chat-disclaimer">' + escHtml( cfg.disclaimer ) + '</p>'
@@ -414,8 +412,8 @@
 				+       onlineText
 				+     '</span>'
 				+     '<button class="ai-chat-close-btn" type="button" aria-label="' + escHtml( closeLbl ) + '">'
-				+       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"'
-				+       ' fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"'
+				+       '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"'
+				+       ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"'
 				+       ' stroke-linejoin="round" aria-hidden="true" focusable="false">'
 				+       '<line x1="18" y1="6" x2="6" y2="18"></line>'
 				+       '<line x1="6" y1="6" x2="18" y2="18"></line>'
@@ -442,6 +440,19 @@
 				+   '</div>'
 				+   disclaimerHtml
 				+ '</div>';
+		},
+
+		brandIconHTML: function () {
+			if ( cfg.bubbleIconUrl ) {
+				return '<img src="' + escHtml( cfg.bubbleIconUrl ) + '" alt="' + escHtml( cfg.companyName || '' ) + '" class="ai-chat-logo ai-chat-logo--bubble-icon" />';
+			}
+			if ( cfg.bubbleIcon ) {
+				return '<span class="ai-chat-logo ai-chat-logo--bubble-icon ai-chat-logo-svg" aria-hidden="true">' + cfg.bubbleIcon + '</span>';
+			}
+			if ( cfg.logoUrl ) {
+				return '<img src="' + escHtml( cfg.logoUrl ) + '" alt="' + escHtml( cfg.companyName || '' ) + '" class="ai-chat-logo" />';
+			}
+			return '<div class="ai-chat-logo-placeholder" aria-hidden="true">' + this.defaultIcon() + '</div>';
 		},
 
 		// ── Events ──────────────────────────────────────────────────────────────
@@ -619,10 +630,12 @@
 
 			this.readyQuestionsDismissed = true;
 			if ( this.el.readyQuestionsWrap ) {
-				this.el.readyQuestionsWrap.classList.add( 'ai-chat-ready-questions-wrap--hidden' );
+				this.el.readyQuestionsWrap.remove();
+				this.el.readyQuestionsWrap = null;
 			}
 			if ( this.el.welcomeMessage ) {
-				this.el.welcomeMessage.classList.add( 'ai-chat-message--hidden' );
+				this.el.welcomeMessage.remove();
+				this.el.welcomeMessage = null;
 			}
 		},
 
