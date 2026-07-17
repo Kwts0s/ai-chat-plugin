@@ -68,6 +68,29 @@
 		return data;
 	}
 
+	/**
+	 * Allow only safe absolute http(s) URLs from the backend.
+	 *
+	 * @param {*} url
+	 * @returns {string}
+	 */
+	function sanitizeAttachmentUrl( url ) {
+		if ( typeof url !== 'string' || ! url ) {
+			return '';
+		}
+
+		try {
+			var parsed = new URL( url, window.location.href );
+			if ( parsed.protocol !== 'http:' && parsed.protocol !== 'https:' ) {
+				return '';
+			}
+
+			return parsed.href;
+		} catch ( e ) {
+			return '';
+		}
+	}
+
 	// ── Session management ────────────────────────────────────────────────────
 
 	var Session = {
@@ -224,7 +247,7 @@
 		 *
 		 * @param {string} message
 		 * @param {boolean} hasRetriedNonce
-		 * @returns {Promise<{sessionId: string, text: string, channel: string}>}
+		 * @returns {Promise<{sessionId: string, text: string, channel: string, attachments?: Array<Object>}>}
 		 */
 		send: function ( message, hasRetriedNonce ) {
 			var retried = !! hasRetriedNonce;
@@ -640,9 +663,13 @@
 					mapWrap.className = 'ai-chat-attachment ai-chat-attachment--map';
 
 					if ( attachment.embedUrl ) {
+						var embedUrl = sanitizeAttachmentUrl( attachment.embedUrl );
+						if ( ! embedUrl ) {
+							return;
+						}
 						var iframe = document.createElement( 'iframe' );
 						iframe.className = 'ai-chat-attachment-map';
-						iframe.src = String( attachment.embedUrl );
+						iframe.src = embedUrl;
 						iframe.loading = 'lazy';
 						iframe.referrerPolicy = 'no-referrer-when-downgrade';
 						iframe.title = String( attachment.label || 'Map' );
@@ -650,9 +677,14 @@
 					}
 
 					if ( attachment.url ) {
+						var mapUrl = sanitizeAttachmentUrl( attachment.url );
+						if ( ! mapUrl ) {
+							container.appendChild( mapWrap );
+							return;
+						}
 						var mapLink = document.createElement( 'a' );
 						mapLink.className = 'ai-chat-attachment-link';
-						mapLink.href = String( attachment.url );
+						mapLink.href = mapUrl;
 						mapLink.target = '_blank';
 						mapLink.rel = 'noopener noreferrer';
 						mapLink.textContent = String( attachment.label || attachment.url );
@@ -663,10 +695,48 @@
 					return;
 				}
 
+				if ( attachment.type === 'image' ) {
+					var imageUrl = sanitizeAttachmentUrl( attachment.url || attachment.src );
+					if ( ! imageUrl ) {
+						return;
+					}
+
+					var imageWrap = document.createElement( 'figure' );
+					imageWrap.className = 'ai-chat-attachment ai-chat-attachment--image';
+
+					var imageLink = document.createElement( 'a' );
+					imageLink.href = imageUrl;
+					imageLink.target = '_blank';
+					imageLink.rel = 'noopener noreferrer';
+					imageLink.className = 'ai-chat-inline-image-link';
+
+					var image = document.createElement( 'img' );
+					image.className = 'ai-chat-inline-image';
+					image.src = imageUrl;
+					image.alt = String( attachment.label || 'Image attachment' );
+					image.loading = 'lazy';
+					imageLink.appendChild( image );
+					imageWrap.appendChild( imageLink );
+
+					if ( attachment.label ) {
+						var caption = document.createElement( 'figcaption' );
+						caption.className = 'ai-chat-attachment-caption';
+						caption.textContent = String( attachment.label );
+						imageWrap.appendChild( caption );
+					}
+
+					container.appendChild( imageWrap );
+					return;
+				}
+
 				if ( attachment.url ) {
+					var genericUrl = sanitizeAttachmentUrl( attachment.url );
+					if ( ! genericUrl ) {
+						return;
+					}
 					var genericLink = document.createElement( 'a' );
 					genericLink.className = 'ai-chat-attachment-link';
-					genericLink.href = String( attachment.url );
+					genericLink.href = genericUrl;
 					genericLink.target = '_blank';
 					genericLink.rel = 'noopener noreferrer';
 					genericLink.textContent = String( attachment.label || attachment.url );
@@ -729,13 +799,36 @@
 		 * @returns {string}
 		 */
 		formatText: function ( text ) {
-			var safe = escHtml( text );
+			var imageTokens = [];
+			var safe = String( text || '' ).replace( /!\[([^\]]*)\]\(([^)\s]+)\)/g, function ( match, alt, url ) {
+				var imageUrl = sanitizeAttachmentUrl( url );
+				if ( ! imageUrl ) {
+					return match;
+				}
+
+				var token = '@@AI_CHAT_IMAGE_' + imageTokens.length + '@@';
+				imageTokens.push(
+					'<figure class="ai-chat-attachment ai-chat-attachment--image">'
+					+ '<a class="ai-chat-inline-image-link" href="' + escHtml( imageUrl ) + '" target="_blank" rel="noopener noreferrer">'
+					+ '<img class="ai-chat-inline-image" src="' + escHtml( imageUrl ) + '" alt="' + escHtml( alt || 'Inline image' ) + '" loading="lazy" />'
+					+ '</a>'
+					+ ( alt ? '<figcaption class="ai-chat-attachment-caption">' + escHtml( alt ) + '</figcaption>' : '' )
+					+ '</figure>'
+				);
+
+				return token;
+			} );
+
+			safe = escHtml( safe );
 			// Newlines → <br>.
 			safe = safe.replace( /\n/g, '<br>' );
 			// **bold**
 			safe = safe.replace( /\*\*(.*?)\*\*/g, '<strong>$1</strong>' );
 			// *italic*
 			safe = safe.replace( /\*(.*?)\*/g, '<em>$1</em>' );
+			imageTokens.forEach( function ( imageHtml, index ) {
+				safe = safe.replace( '@@AI_CHAT_IMAGE_' + index + '@@', imageHtml );
+			} );
 			return safe;
 		},
 

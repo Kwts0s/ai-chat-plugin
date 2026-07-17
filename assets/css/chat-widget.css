@@ -330,6 +330,70 @@
 	display: none;
 }
 
+.ai-chat-attachment {
+	display: block;
+	margin-top: 12px;
+}
+
+.ai-chat-attachment--image {
+	margin: 12px 0 0;
+}
+
+.ai-chat-inline-image-link {
+	display: block;
+	text-decoration: none;
+}
+
+.ai-chat-inline-image {
+	display: block;
+	width: 100%;
+	max-width: 280px;
+	height: auto;
+	border-radius: 12px;
+	border: 1px solid rgba(15, 23, 42, .08);
+	box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+	background: #fff;
+}
+
+.ai-chat-attachment-caption {
+	margin-top: 6px;
+	font-size: 12px;
+	line-height: 1.4;
+	color: rgba(15, 23, 42, .68);
+}
+
+.ai-chat-attachment--map {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.ai-chat-attachment-map {
+	display: block;
+	width: min(100%, 280px);
+	height: 180px;
+	border: 0;
+	border-radius: 12px;
+	box-shadow: 0 8px 20px rgba(15, 23, 42, .12);
+	background: #e2e8f0;
+}
+
+.ai-chat-attachment-link {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	color: var(--ai-chat-primary);
+	font-size: 13px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.ai-chat-attachment-link:hover,
+.ai-chat-attachment-link:focus-visible {
+	text-decoration: underline;
+	outline: none;
+}
+
 /* ── Typing indicator ────────────────────────────────────────────────────── */
 
 .ai-chat-typing-bubble {
