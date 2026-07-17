@@ -407,8 +407,8 @@
 
 .ai-chat-ready-question {
 	background:      rgba(255, 255, 255, .18) !important;
-	color:           #D9252E !important;
-	border:          1px solid rgba(217, 37, 46, .52) !important;
+	color:           var(--ai-chat-primary) !important;
+	border:          1px solid rgba(25, 59, 122, .52) !important;
 	border-radius:   999px !important;
 	padding:         7px 14px !important;
 	font-size:       13px !important;
@@ -422,7 +422,8 @@
 .ai-chat-ready-question:hover:not(:disabled),
 .ai-chat-ready-question:focus-visible {
 	background:    rgba(255, 255, 255, .2) !important;
-	border-color:  rgba(255, 255, 255, .62) !important;
+	color:         rgba(25, 59, 122, .4) !important;
+	border-color:  rgba(25, 59, 122, .4) !important;
 	transform:     translateY(-1px) !important;
 	outline:       none !important;
 	box-shadow:    none !important;
@@ -480,23 +481,23 @@
 
 .ai-chat-send-btn {
 	background:      rgba(177, 153, 106, .36);
-	color:           var(--ai-chat-primary);
-	border:          none;
-	border-radius:   50%;
-	width:           38px;
-	height:          38px;
-	min-width:       38px;
-	display:         flex;
-	align-items:     center;
-	justify-content: center;
-	cursor:          pointer;
-	flex-shrink:     0;
-	transition:      background .2s, transform .1s, opacity .2s;
-	padding:         0;
+	color:           var(--ai-chat-secondary) !important;
+	border:          none !important;
+	width:           38px !important;
+	height:          38px !important;
+	min-width:       38px !important;
+	display:         flex !important;
+	align-items:     center !important;
+	justify-content: center !important;
+	cursor:          pointer !important;
+	flex-shrink:     0 !important;
+	transition:      background .2s, transform .1s, opacity .2s !important;
+	padding:         0 !important;
 }
 
-.ai-chat-send-btn:hover:not(:disabled) {
-	background: rgba(177, 153, 106, .48);
+.ai-chat-send-btn:hover {
+	background-color: var(--ai-chat-secondary) !important;
+	color: white !important;
 }
 
 .ai-chat-send-btn:active:not(:disabled) {
@@ -506,6 +507,13 @@
 .ai-chat-send-btn:disabled {
 	opacity: .4;
 	cursor:  not-allowed;
+	color: var(--ai-chat-secondary) !important;
+}
+.ai-chat-send-btn:hover:disabled {
+	opacity: .4;
+	cursor:  not-allowed;
+	background-color: var(--ai-chat-secondary) !important;
+	color: white !important;
 }
 
 .ai-chat-send-btn:focus-visible {

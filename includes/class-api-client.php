@@ -38,7 +38,7 @@ final class AI_Chat_API_Client {
 	 *
 	 * @param string $message   User message.
 	 * @param string $session_id Session ID.
-	 * @return array{sessionId: string, text: string, channel: string}|WP_Error
+	 * @return array<string, mixed>|WP_Error
 	 */
 	public function send_chat( string $message, string $session_id ) {
 		if ( empty( $this->base_url ) ) {
@@ -64,6 +64,7 @@ final class AI_Chat_API_Client {
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+		$data = $this->normalize_chat_response( $data );
 
 		if ( ! is_array( $data ) || ! isset( $data['text'] ) ) {
 			return new WP_Error( 'bad_response', __( 'Invalid response from backend.', 'ai-chat-plugin' ) );
@@ -163,5 +164,30 @@ final class AI_Chat_API_Client {
 	 */
 	private function user_agent(): string {
 		return sprintf( 'WordPress/%s AI-Chat-Plugin/%s', get_bloginfo( 'version' ), AI_CHAT_VERSION );
+	}
+
+	/**
+	 * Normalize chat responses from the backend.
+	 *
+	 * Supports both the legacy single-object payload and the new array-wrapped
+	 * payload where the first item contains the chat message.
+	 *
+	 * @param mixed $data Decoded JSON response.
+	 * @return array<string, mixed>|null
+	 */
+	private function normalize_chat_response( $data ): ?array {
+		if ( ! is_array( $data ) ) {
+			return null;
+		}
+
+		if ( isset( $data['text'] ) ) {
+			return $data;
+		}
+
+		if ( isset( $data[0] ) && is_array( $data[0] ) && isset( $data[0]['text'] ) ) {
+			return $data[0];
+		}
+
+		return null;
 	}
 }

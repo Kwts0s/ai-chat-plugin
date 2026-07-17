@@ -46,6 +46,28 @@
 		}
 	}
 
+	/**
+	 * Normalize backend responses across API versions.
+	 *
+	 * @param {*} data Backend response payload.
+	 * @returns {?Object}
+	 */
+	function normalizeResponse( data ) {
+		if ( ! data ) {
+			return null;
+		}
+
+		if ( Array.isArray( data ) ) {
+			data = data[ 0 ] || null;
+		}
+
+		if ( ! data || typeof data !== 'object' || typeof data.text !== 'string' ) {
+			return null;
+		}
+
+		return data;
+	}
+
 	// ── Session management ────────────────────────────────────────────────────
 
 	var Session = {
@@ -263,12 +285,17 @@
 
 				return response.json();
 			} ).then( function ( data ) {
+				var normalized = normalizeResponse( data );
+				if ( ! normalized ) {
+					throw new Error( ( cfg.i18n && cfg.i18n.error ) || 'An error occurred. Please try again.' );
+				}
+
 				// Let backend update the session ID if needed.
-				if ( data && data.sessionId ) {
-					Session.id = data.sessionId;
+				if ( normalized.sessionId ) {
+					Session.id = normalized.sessionId;
 					Session.persist();
 				}
-				return data;
+				return normalized;
 			} ).catch( function ( err ) {
 				if ( timer ) { clearTimeout( timer ); }
 				if ( err && err.name === 'AbortError' ) {
@@ -546,7 +573,9 @@
 			var self = this;
 			API.send( trimmedMessage ).then( function ( data ) {
 				self.removeTyping();
-				self.addMessage( 'bot', ( data && data.text ) ? data.text : '' );
+				self.addMessage( 'bot', ( data && data.text ) ? data.text : '', true, {
+					attachments: data && data.attachments,
+				} );
 			} ).catch( function ( err ) {
 				self.removeTyping();
 				self.showError( ( err && err.message ) || ( ( cfg.i18n && cfg.i18n.error ) || 'An error occurred. Please try again.' ) );
@@ -579,6 +608,10 @@
 			bubble.className = 'ai-chat-message-bubble';
 			bubble.innerHTML = this.formatText( text );
 
+			if ( role === 'bot' && options.attachments ) {
+				this.appendAttachments( bubble, options.attachments );
+			}
+
 			msgEl.appendChild( bubble );
 			this.el.messages.appendChild( msgEl );
 			if ( role === 'bot' ) {
@@ -590,6 +623,56 @@
 			}
 
 			if ( scroll ) { this.scrollToBottom(); }
+		},
+
+		appendAttachments: function ( container, attachments ) {
+			if ( ! Array.isArray( attachments ) || ! attachments.length ) {
+				return;
+			}
+
+			attachments.forEach( function ( attachment ) {
+				if ( ! attachment || typeof attachment !== 'object' ) {
+					return;
+				}
+
+				if ( attachment.type === 'map' ) {
+					var mapWrap = document.createElement( 'div' );
+					mapWrap.className = 'ai-chat-attachment ai-chat-attachment--map';
+
+					if ( attachment.embedUrl ) {
+						var iframe = document.createElement( 'iframe' );
+						iframe.className = 'ai-chat-attachment-map';
+						iframe.src = String( attachment.embedUrl );
+						iframe.loading = 'lazy';
+						iframe.referrerPolicy = 'no-referrer-when-downgrade';
+						iframe.title = String( attachment.label || 'Map' );
+						mapWrap.appendChild( iframe );
+					}
+
+					if ( attachment.url ) {
+						var mapLink = document.createElement( 'a' );
+						mapLink.className = 'ai-chat-attachment-link';
+						mapLink.href = String( attachment.url );
+						mapLink.target = '_blank';
+						mapLink.rel = 'noopener noreferrer';
+						mapLink.textContent = String( attachment.label || attachment.url );
+						mapWrap.appendChild( mapLink );
+					}
+
+					container.appendChild( mapWrap );
+					return;
+				}
+
+				if ( attachment.url ) {
+					var genericLink = document.createElement( 'a' );
+					genericLink.className = 'ai-chat-attachment-link';
+					genericLink.href = String( attachment.url );
+					genericLink.target = '_blank';
+					genericLink.rel = 'noopener noreferrer';
+					genericLink.textContent = String( attachment.label || attachment.url );
+					container.appendChild( genericLink );
+				}
+			} );
 		},
 
 		ensureReadyQuestionsAfterFirstBotMessage: function ( anchorMessageEl ) {
