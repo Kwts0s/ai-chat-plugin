@@ -27,18 +27,14 @@ final class AI_Chat_Assets {
 	public function enqueue_frontend(): void {
 		$settings = AI_Chat_Sanitizer::get_settings();
 
-		if ( ! $this->should_load_on_current_page( $settings ) ) {
-			return;
-		}
-
-		wp_enqueue_style(
+		wp_register_style(
 			'ai-chat-widget',
 			AI_CHAT_URL . 'assets/css/chat-widget.css',
 			array(),
 			$this->asset_version( 'assets/css/chat-widget.css' )
 		);
 
-		wp_enqueue_script(
+		wp_register_script(
 			'ai-chat-widget',
 			AI_CHAT_URL . 'assets/js/chat-widget.js',
 			array(),
@@ -53,8 +49,13 @@ final class AI_Chat_Assets {
 			$this->build_js_config( $settings )
 		);
 
-		// Inject CSS custom properties as an inline style.
+		// Attach CSS variables to the registered handle for shortcode pages too.
 		$this->inline_css_variables( $settings );
+
+		if ( $this->should_load_on_current_page( $settings ) ) {
+			wp_enqueue_style( 'ai-chat-widget' );
+			wp_enqueue_script( 'ai-chat-widget' );
+		}
 	}
 
 	// ── Admin ───────────────────────────────────────────────────────────────
@@ -131,10 +132,11 @@ final class AI_Chat_Assets {
 	 * @return bool
 	 */
 	private function should_load_on_current_page( array $settings ): bool {
-		// If display_mode is 'shortcode', assets are still needed (shortcode may be present).
-		// We enqueue them lazily from the shortcode itself but keep it simple here.
+		// Enqueue before wp_head when the current post contains the shortcode.
+		// Dynamic shortcode rendering still enqueues the registered handles later.
 		if ( 'shortcode' === $settings['display_mode'] ) {
-			return false; // Enqueued on demand by AI_Chat_Frontend.
+			$post = get_queried_object();
+			return $post instanceof WP_Post && has_shortcode( $post->post_content, 'ai_chat_widget' );
 		}
 
 		if ( 'global' === $settings['display_mode'] ) {
@@ -165,7 +167,10 @@ final class AI_Chat_Assets {
 			'mode'            => $settings['connection_mode'],
 			'proxyUrl'        => $is_proxy ? esc_url_raw( rest_url( AI_Chat_REST_Controller::NAMESPACE . '/chat' ) ) : '',
 			'nonceUrl'        => $is_proxy ? esc_url_raw( rest_url( AI_Chat_REST_Controller::NAMESPACE . '/nonce' ) ) : '',
-			'nonce'           => $is_proxy ? wp_create_nonce( 'ai_chat_proxy' ) : '',
+			// REST cookie authentication treats requests without X-WP-Nonce as
+			// anonymous, even on a logged-in page. Fetch the matching nonce via
+			// the public REST endpoint immediately before sending a chat message.
+			'nonce'           => '',
 			'companyName'     => esc_html( $settings['company_name'] ),
 			'companySubtitle' => esc_html( $settings['company_subtitle'] ),
 			'logoUrl'         => esc_url( $settings['company_logo'] ),
@@ -198,6 +203,8 @@ final class AI_Chat_Assets {
 				'readyQuestions' => __( 'Ready to use questions', 'ai-chat-plugin' ),
 				'timeout'    => __( 'Request timed out. Please try again.', 'ai-chat-plugin' ),
 				'error'      => __( 'An error occurred. Please try again.', 'ai-chat-plugin' ),
+				'nonceUnavailable' => __( 'Chat is temporarily unavailable. Please try again.', 'ai-chat-plugin' ),
+				'previousConversationUnavailable' => __( 'The previous conversation could not be resumed. A new conversation has started.', 'ai-chat-plugin' ),
 				'reset'      => __( 'Clear conversation', 'ai-chat-plugin' ),
 			),
 		);

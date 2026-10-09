@@ -96,7 +96,9 @@ final class AI_Chat_REST_Controller {
 	 * @return bool|WP_Error
 	 */
 	public function check_nonce_and_rate_limit( WP_REST_Request $request ) {
-		// Verify nonce (works for both logged-in and anonymous visitors).
+		// This public nonce is request hygiene, not visitor authorization.
+		// Both nonce issuance and verification use the anonymous REST context
+		// because the widget does not send X-WP-Nonce.
 		$nonce = $request->get_header( 'X-AI-Chat-Nonce' );
 		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'ai_chat_proxy' ) ) {
 			return new WP_Error(
@@ -184,6 +186,14 @@ final class AI_Chat_REST_Controller {
 	public function handle_chat( WP_REST_Request $request ) {
 		$settings   = AI_Chat_Sanitizer::get_settings();
 		$message    = $request->get_param( 'message' );
+		$history_access_token = (string) $request->get_header( 'X-Chat-History-Token' );
+		if ( '' !== $history_access_token && ( strlen( $history_access_token ) > 512 || ! preg_match( '/\A[\x21-\x7E]+\z/D', $history_access_token ) ) ) {
+			return new WP_Error(
+				'invalid_history_token',
+				__( 'Invalid chat history token.', 'ai-chat-plugin' ),
+				array( 'status' => 400 )
+			);
+		}
 		$session_id = AI_Chat_Session_Manager::validate_or_create(
 			(string) $request->get_param( 'sessionId' )
 		);
@@ -205,7 +215,7 @@ final class AI_Chat_REST_Controller {
 		);
 
 		$client   = new AI_Chat_API_Client( $settings['backend_url'], (int) $settings['request_timeout'] );
-		$response = $client->send_chat( (string) $payload['message'], (string) $payload['sessionId'] );
+		$response = $client->send_chat( (string) $payload['message'], (string) $payload['sessionId'], $history_access_token );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error(
@@ -254,7 +264,7 @@ final class AI_Chat_REST_Controller {
 	}
 
 	/**
-	 * Return a fresh proxy nonce for frontend retry flow.
+	 * Return a fresh proxy nonce for each frontend chat request.
 	 *
 	 * @param WP_REST_Request $request Incoming request.
 	 * @return WP_REST_Response|WP_Error
@@ -328,32 +338,16 @@ final class AI_Chat_REST_Controller {
 	}
 
 	/**
-	 * Retrieve the real client IP address.
+	 * Retrieve the peer IP address used for rate limiting.
+	 *
+	 * Forwarding headers are supplied by the requester unless a trusted proxy
+	 * has explicitly validated them, so they must not select the rate bucket.
 	 *
 	 * @return string
 	 */
 	private function get_client_ip(): string {
-		$candidates = array(
-			'HTTP_CLIENT_IP',
-			'HTTP_X_FORWARDED_FOR',
-			'HTTP_X_REAL_IP',
-			'REMOTE_ADDR',
-		);
-
-		foreach ( $candidates as $key ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized below via filter_var.
-			$value = isset( $_SERVER[ $key ] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER[ $key ] ) ) : '';
-			if ( '' === $value ) {
-				continue;
-			}
-			// Take the first IP if there are multiple (e.g. X-Forwarded-For chain).
-			$ip = trim( explode( ',', $value )[0] );
-			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
-				return $ip;
-			}
-		}
-
-		return '0.0.0.0';
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '0.0.0.0';
 	}
 
 	/**

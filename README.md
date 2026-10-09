@@ -14,7 +14,7 @@ A production-ready WordPress plugin that adds a fully customizable chatbot widge
 | ♿ **Accessible** | ARIA roles, keyboard navigation (Enter to send, Shift+Enter for newline, ESC to close), focus management |
 | 🌍 **RTL-ready** | CSS structure supports right-to-left languages |
 | ⚡ **Lightweight** | Vanilla JS — no jQuery or framework on the frontend |
-| 🛡️ **Security-first** | Nonce verification, per-IP rate limiting, strict SVG sanitization, output escaping throughout |
+| 🛡️ **Request safety** | Per-peer-IP rate limiting, public nonce checks, strict SVG sanitization, output escaping throughout |
 | 🔧 **Developer hooks** | Filters to modify outgoing payload, incoming response, and the JS config |
 
 ---
@@ -51,14 +51,24 @@ The plugin expects the following endpoints on your backend:
 }
 ```
 
+For later messages in the same session, send the `historyAccessToken` returned by
+the previous response in the `X-Chat-History-Token` request header. The first
+message has no history token. The widget handles this in both proxy and direct
+mode. It keeps the token in the browser's session storage; if that token is no
+longer available, it starts a new backend session instead of reusing an
+inaccessible session ID.
+
 **Response body:**
 ```json
 {
   "sessionId": "uuid-v4-string",
   "text":      "Assistant reply",
-  "channel":   "chat"
+  "channel":   "chat",
+  "historyAccessToken": "opaque-token"
 }
 ```
+
+The backend may wrap this response in an array. The plugin accepts either form.
 
 ### Health check — `GET {BACKEND_URL}/chat/health`
 
@@ -96,7 +106,9 @@ Browser → POST /wp-json/ai-chat/v1/chat → WordPress → POST {backend}/chat 
 ```
 
 - Backend URL is **never** sent to the browser.
-- Requests are verified with a WordPress nonce (`ai_chat_proxy`).
+- The widget fetches a WordPress nonce (`ai_chat_proxy`) before each message so
+  cached pages do not send an expired nonce. This public nonce is request
+  hygiene, not visitor authorization or the primary abuse control.
 - Rate-limited per visitor IP using WordPress transients.
 
 ### Direct
@@ -105,7 +117,8 @@ Browser → POST /wp-json/ai-chat/v1/chat → WordPress → POST {backend}/chat 
 Browser → POST {BACKEND_URL}/chat
 ```
 
-- Requires CORS to be enabled on the backend.
+- Requires CORS to be enabled on the backend, including the
+  `X-Chat-History-Token` request header for follow-up messages.
 - Backend URL is exposed to the browser — only use if the backend is intentionally public.
 
 ---
@@ -187,7 +200,8 @@ add_filter( 'ai_chat_proxy_payload', function ( array $payload ): array {
 - All admin inputs are sanitized via `AI_Chat_Sanitizer::sanitize_settings()`.
 - All HTML output uses `esc_html()`, `esc_attr()`, `esc_url()`, and `wp_kses()`.
 - SVG input is parsed with DOMDocument and rebuilt from an allowlist of safe elements/attributes — scripts and event handlers are stripped.
-- The proxy REST endpoint requires a short-lived nonce (`ai_chat_proxy`) and enforces per-IP rate limiting.
+- The proxy REST endpoint checks a short-lived public nonce (`ai_chat_proxy`)
+  and applies a per-peer-IP rate limit. The nonce does not authorize access.
 - The backend URL is never sent to the browser in proxy mode.
 - The JS widget escapes all text before inserting it into the DOM (`textContent` / custom `escHtml()`).
 

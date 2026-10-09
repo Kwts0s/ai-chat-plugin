@@ -24,7 +24,7 @@ backend URL is never exposed to visitors.
 * ♿ **Accessible** — ARIA roles, keyboard navigation, ESC to close
 * 🌍 **RTL-ready** — CSS structure supports right-to-left languages
 * ⚡ **Lightweight** — no jQuery or framework on the frontend (vanilla JS)
-* 🛡️ **Security-first** — nonce verification, rate limiting, SVG sanitization, strict output escaping
+* 🛡️ **Request safety** — public nonce checks, peer-IP rate limiting, SVG sanitization, strict output escaping
 * 🔧 **Developer hooks** — filters to override payload, response, and JS config
 
 = Minimum Requirements =

@@ -28,9 +28,8 @@ final class AI_Chat_Frontend {
 	 * and a <noscript> fallback.
 	 */
 	public function render_widget(): void {
-		$settings = AI_Chat_Sanitizer::get_settings();
-
-		// Don't render if assets aren't enqueued (page not in scope, or shortcode mode).
+		// The shortcode can enqueue the registered assets after wp_enqueue_scripts.
+		// Render only when the widget script will actually be printed.
 		if ( ! wp_script_is( 'ai-chat-widget', 'enqueued' ) ) {
 			return;
 		}
@@ -52,7 +51,8 @@ final class AI_Chat_Frontend {
 	public function render_shortcode( array $atts, ?string $content = null ): string {
 		$settings = AI_Chat_Sanitizer::get_settings();
 
-		// Enqueue assets on-demand.
+		// Asset registration and configuration happen on wp_enqueue_scripts.
+		// Dynamic shortcode placement can still enqueue the handles here.
 		if ( ! wp_script_is( 'ai-chat-widget', 'enqueued' ) ) {
 			wp_enqueue_style( 'ai-chat-widget' );
 			wp_enqueue_script( 'ai-chat-widget' );

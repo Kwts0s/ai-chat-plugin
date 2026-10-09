@@ -189,24 +189,19 @@ final class AI_Chat_Sanitizer {
 			return '';
 		}
 
-		// Must contain an <svg> element.
-		if ( ! preg_match( '/<svg[\s>]/i', $svg ) ) {
-			return '';
-		}
-
 		$allowed_tags = array(
 			'svg', 'g', 'path', 'circle', 'rect', 'ellipse', 'line',
 			'polyline', 'polygon', 'use', 'defs', 'symbol', 'title', 'desc',
-			'linearGradient', 'radialGradient', 'stop', 'clipPath', 'mask',
+			'lineargradient', 'radialgradient', 'stop', 'clippath', 'mask',
 		);
 
 		$allowed_attrs = array(
-			'xmlns', 'viewBox', 'width', 'height', 'fill', 'stroke',
+			'xmlns', 'viewbox', 'width', 'height', 'fill', 'stroke',
 			'stroke-width', 'stroke-linecap', 'stroke-linejoin',
 			'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'class',
 			'd', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'y1',
-			'x2', 'y2', 'points', 'transform', 'gradientUnits',
-			'gradientTransform', 'offset', 'stop-color', 'stop-opacity',
+			'x2', 'y2', 'points', 'transform', 'gradientunits',
+			'gradienttransform', 'offset', 'stop-color', 'stop-opacity',
 			'clip-path', 'mask', 'aria-hidden', 'role', 'focusable',
 			'xmlns:xlink', 'id',
 		);
@@ -216,7 +211,10 @@ final class AI_Chat_Sanitizer {
 		$dom->loadXML( $svg, LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_NONET );
 		libxml_clear_errors();
 
-		if ( ! $dom->documentElement ) {
+		if ( ! $dom->documentElement || 'svg' !== strtolower( $dom->documentElement->localName ) ) {
+			return '';
+		}
+		if ( $dom->documentElement->namespaceURI && 'http://www.w3.org/2000/svg' !== $dom->documentElement->namespaceURI ) {
 			return '';
 		}
 
@@ -234,6 +232,19 @@ final class AI_Chat_Sanitizer {
 	 * @param string[]      $allowed_attrs Allowed attribute names.
 	 */
 	private static function clean_svg_node( DOMElement $node, array $allowed_tags, array $allowed_attrs ): void {
+		// The root <svg> is inserted inline, so its attributes need the same
+		// allowlist as every descendant.
+		$attrs_to_remove = array();
+		foreach ( $node->attributes as $attr ) {
+			$name = strtolower( $attr->name );
+			if ( strncmp( $name, 'on', 2 ) === 0 || ! in_array( $name, $allowed_attrs, true ) ) {
+				$attrs_to_remove[] = $attr->name;
+			}
+		}
+		foreach ( $attrs_to_remove as $attr_name ) {
+			$node->removeAttribute( $attr_name );
+		}
+
 		// Collect children first (we may remove them during iteration).
 		$children = array();
 		foreach ( $node->childNodes as $child ) {
@@ -243,7 +254,7 @@ final class AI_Chat_Sanitizer {
 		foreach ( $children as $child ) {
 			if ( $child instanceof DOMElement ) {
 				$tag = strtolower( $child->localName );
-				if ( ! in_array( $tag, $allowed_tags, true ) ) {
+				if ( ! in_array( $tag, $allowed_tags, true ) || ( $child->namespaceURI && 'http://www.w3.org/2000/svg' !== $child->namespaceURI ) ) {
 					$node->removeChild( $child );
 					continue;
 				}

@@ -96,14 +96,31 @@
 	var Session = {
 		/** @type {string} */
 		key: 'ai_chat_session_id',
+		tokenKeyPrefix: 'ai_chat_history_access:',
 		/** @type {string} */
 		id: '',
+		/** @type {string} */
+		historyAccessToken: '',
+		restarted: false,
 
 		init: function () {
 			try {
 				this.id = localStorage.getItem( this.key ) || '';
 			} catch ( e ) {
 				this.id = '';
+			}
+			if ( this.id ) {
+				try {
+					this.historyAccessToken = sessionStorage.getItem( this.tokenKeyPrefix + this.id ) || '';
+				} catch ( e ) {
+					this.historyAccessToken = '';
+				}
+				// A saved ID without its history credential cannot be resumed.
+				if ( ! this.historyAccessToken ) {
+					this.restarted = true;
+					this.id = '';
+					try { localStorage.removeItem( Transcript.key ); } catch ( e ) { /* noop */ }
+				}
 			}
 			if ( ! this.id ) {
 				this.id = this.generate();
@@ -163,12 +180,30 @@
 		},
 
 		reset: function () {
+			try { sessionStorage.removeItem( this.tokenKeyPrefix + this.id ); } catch ( e ) { /* noop */ }
 			this.id = this.generate();
+			this.historyAccessToken = '';
+			this.restarted = false;
 			this.persist();
 			if ( cfg.storeTranscript ) {
 				try { localStorage.removeItem( Transcript.key ); } catch ( e ) { /* noop */ }
 			}
 			log( 'Session reset:', this.id );
+		},
+
+		updateFromResponse: function ( response ) {
+			if ( response.sessionId && response.sessionId !== this.id ) {
+				try { sessionStorage.removeItem( this.tokenKeyPrefix + this.id ); } catch ( e ) { /* noop */ }
+				this.id = String( response.sessionId );
+				this.historyAccessToken = '';
+				this.persist();
+			}
+			if ( typeof response.historyAccessToken === 'string' && response.historyAccessToken ) {
+				this.historyAccessToken = response.historyAccessToken;
+				try {
+					sessionStorage.setItem( this.tokenKeyPrefix + this.id, this.historyAccessToken );
+				} catch ( e ) { /* Storage unavailable; current page can still continue. */ }
+			}
 		},
 	};
 
@@ -219,10 +254,13 @@
 				return Promise.resolve( false );
 			}
 
-			return fetch( cfg.nonceUrl, {
+			var nonceUrl = cfg.nonceUrl + ( cfg.nonceUrl.indexOf( '?' ) === -1 ? '?' : '&' )
+				+ 'ai_chat_nonce_request=' + Date.now();
+			return fetch( nonceUrl, {
 				method:      'GET',
 				cache:       'no-store',
 				credentials: 'same-origin',
+				headers:     { 'Cache-Control': 'no-cache' },
 			} ).then( function ( response ) {
 				if ( ! response.ok ) {
 					return false;
@@ -247,9 +285,21 @@
 		 *
 		 * @param {string} message
 		 * @param {boolean} hasRetriedNonce
+		 * @param {boolean} nonceWasRefreshed
 		 * @returns {Promise<{sessionId: string, text: string, channel: string, attachments?: Array<Object>}>}
 		 */
-		send: function ( message, hasRetriedNonce ) {
+		send: function ( message, hasRetriedNonce, nonceWasRefreshed ) {
+			// Obtain a nonce in the same REST context that will verify it. This
+			// also works when the page itself has been cached for hours.
+			if ( cfg.mode === 'proxy' && ! nonceWasRefreshed ) {
+				return API.refreshNonce().then( function ( refreshed ) {
+					if ( ! refreshed ) {
+						throw new Error( ( cfg.i18n && cfg.i18n.nonceUnavailable ) || 'Chat is temporarily unavailable. Please try again.' );
+					}
+					return API.send( message, hasRetriedNonce, true );
+				} );
+			}
+
 			var retried = !! hasRetriedNonce;
 			var timeoutMs = ( ( cfg.timeout || 30 ) * 1000 );
 			var controller = ( typeof AbortController !== 'undefined' ) ? new AbortController() : null;
@@ -267,6 +317,9 @@
 					'X-AI-Chat-Nonce': cfg.nonce || '',
 				};
 			}
+			if ( Session.historyAccessToken ) {
+				headers['X-Chat-History-Token'] = Session.historyAccessToken;
+			}
 
 			body = JSON.stringify( {
 				sessionId: Session.id,
@@ -279,6 +332,9 @@
 				headers: headers,
 				body:    body,
 			};
+			if ( cfg.mode === 'proxy' ) {
+				fetchOptions.credentials = 'same-origin';
+			}
 			if ( controller ) {
 				fetchOptions.signal = controller.signal;
 			}
@@ -297,7 +353,7 @@
 						) {
 							return API.refreshNonce().then( function ( refreshed ) {
 								if ( refreshed ) {
-									return API.send( message, true );
+									return API.send( message, true, true );
 								}
 								throw new Error( errData.message || ( 'HTTP ' + response.status ) );
 							} );
@@ -313,11 +369,7 @@
 					throw new Error( ( cfg.i18n && cfg.i18n.error ) || 'An error occurred. Please try again.' );
 				}
 
-				// Let backend update the session ID if needed.
-				if ( normalized.sessionId ) {
-					Session.id = normalized.sessionId;
-					Session.persist();
-				}
+				Session.updateFromResponse( normalized );
 				return normalized;
 			} ).catch( function ( err ) {
 				if ( timer ) { clearTimeout( timer ); }
@@ -370,6 +422,10 @@
 					isWelcome: true,
 					persist: false,
 				} );
+			}
+			if ( Session.restarted ) {
+				this.showError( ( cfg.i18n && cfg.i18n.previousConversationUnavailable )
+					|| 'The previous conversation could not be resumed. A new conversation has started.' );
 			}
 
 			// Handle shortcode trigger buttons.

@@ -37,10 +37,11 @@ final class AI_Chat_API_Client {
 	 * Send a chat message to the backend.
 	 *
 	 * @param string $message   User message.
-	 * @param string $session_id Session ID.
+	 * @param string $session_id          Session ID.
+	 * @param string $history_access_token Credential returned by the backend for this session.
 	 * @return array<string, mixed>|WP_Error
 	 */
-	public function send_chat( string $message, string $session_id ) {
+	public function send_chat( string $message, string $session_id, string $history_access_token = '' ) {
 		if ( empty( $this->base_url ) ) {
 			return new WP_Error( 'no_backend', __( 'Backend URL is not configured.', 'ai-chat-plugin' ) );
 		}
@@ -57,7 +58,7 @@ final class AI_Chat_API_Client {
 			return new WP_Error( 'encode_error', __( 'Failed to encode request body.', 'ai-chat-plugin' ) );
 		}
 
-		$response = $this->post( '/chat', $body );
+		$response = $this->post( '/chat', $body, $history_access_token );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -107,11 +108,20 @@ final class AI_Chat_API_Client {
 	/**
 	 * Perform a POST request to the given path.
 	 *
-	 * @param string $path Relative path (e.g. '/chat').
-	 * @param string $body JSON body.
+	 * @param string $path                 Relative path (e.g. '/chat').
+	 * @param string $body                 JSON body.
+	 * @param string $history_access_token Backend history credential.
 	 * @return array<string, mixed>|WP_Error WordPress response or error.
 	 */
-	private function post( string $path, string $body ) {
+	private function post( string $path, string $body, string $history_access_token = '' ) {
+		$headers = array(
+			'Content-Type' => 'application/json',
+			'Accept'       => 'application/json',
+			'User-Agent'   => $this->user_agent(),
+		);
+		if ( '' !== $history_access_token ) {
+			$headers['X-Chat-History-Token'] = $history_access_token;
+		}
 		/**
 		 * Allow developers to modify the outgoing args.
 		 *
@@ -124,11 +134,7 @@ final class AI_Chat_API_Client {
 			array(
 				'method'      => 'POST',
 				'timeout'     => $this->timeout,
-				'headers'     => array(
-					'Content-Type' => 'application/json',
-					'Accept'       => 'application/json',
-					'User-Agent'   => $this->user_agent(),
-				),
+				'headers'     => $headers,
 				'body'        => $body,
 				'data_format' => 'body',
 				'sslverify'   => true,
@@ -146,6 +152,13 @@ final class AI_Chat_API_Client {
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( $code < 200 || $code >= 300 ) {
 			$msg = wp_remote_retrieve_response_message( $response );
+			$backend_data = json_decode( wp_remote_retrieve_body( $response ), true );
+			$reason = is_array( $backend_data ) && isset( $backend_data['message'] )
+				&& 'Chat history is not available for this session.' === $backend_data['message']
+				? 'history_unavailable'
+				: 'http_error';
+			// Keep diagnostics useful without logging the response body or tokens.
+			error_log( sprintf( '[AI Chat] Backend %s returned HTTP %d (%s).', $path, $code, $reason ) );
 			return new WP_Error(
 				'backend_error',
 				/* translators: %1$d HTTP status code, %2$s status message. */
